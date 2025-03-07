@@ -8,6 +8,7 @@ import concurrent.futures
 from _config import PERPLEXITY_API_KEY
 from slugify import slugify
 
+
 class BookFinder(JSONCache):
     def __init__(self, title: str, author: str, model: str = "sonar-pro") -> None:
         data_id = f"{slugify(title)}-{slugify(author)}-{slugify(model)}"
@@ -17,6 +18,7 @@ class BookFinder(JSONCache):
         self.author = author
         self.api_key = PERPLEXITY_API_KEY
         self.model = model
+        self.max_chunk_size = 50 * 1024  # 50kB in bytes
 
         if not hasattr(self, "source_urls"):
             self.source_urls = []
@@ -141,6 +143,99 @@ class BookFinder(JSONCache):
                 }
 
         return result
+
+    @Logger()
+    def _split_text(self, text: str) -> List[str]:
+        if len(text.encode('utf-8')) <= self.max_chunk_size:
+            return [text]
+
+        # Split text into lines
+        lines = text.split('\n')
+        chunks = []
+        current_chunk = ""
+
+        # Helper function to check if a line is a markdown headline
+        def is_headline(line: str) -> bool:
+            stripped = line.strip()
+            return stripped.startswith('#') and ' ' in stripped
+
+        # Helper function to check if adding content would exceed chunk size
+        def would_exceed_limit(current: str, addition: str) -> bool:
+            return len((current + addition).encode('utf-8')) > self.max_chunk_size
+
+        # Process line by line, preferring to split after headlines
+        for i, line in enumerate(lines):
+            # If adding this line would exceed chunk size, or if previous line was a headline
+            # and current chunk is not empty and not too small
+            previous_line_is_headline = i > 0 and is_headline(lines[i - 1])
+            current_chunk_has_content = len(current_chunk.encode('utf-8')) > 5000  # At least 5KB
+
+            if (would_exceed_limit(current_chunk, '\n' + line) or
+                    (previous_line_is_headline and current_chunk_has_content)):
+
+                if current_chunk:  # Don't add empty chunks
+                    chunks.append(current_chunk)
+                current_chunk = line
+            else:
+                if current_chunk:
+                    current_chunk += '\n' + line
+                else:
+                    current_chunk = line
+
+        # Add the last chunk if it's not empty
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        # If any chunk is still too large, split it further using paragraph boundaries
+        final_chunks = []
+        for chunk in chunks:
+            if len(chunk.encode('utf-8')) > self.max_chunk_size:
+                # Split by paragraphs
+                paragraphs = chunk.split('\n\n')
+                sub_chunk = ""
+
+                for paragraph in paragraphs:
+                    if would_exceed_limit(sub_chunk, '\n\n' + paragraph):
+                        if sub_chunk:
+                            final_chunks.append(sub_chunk)
+                        sub_chunk = paragraph
+                    else:
+                        if sub_chunk:
+                            sub_chunk += '\n\n' + paragraph
+                        else:
+                            sub_chunk = paragraph
+
+                if sub_chunk:
+                    final_chunks.append(sub_chunk)
+            else:
+                final_chunks.append(chunk)
+
+        return final_chunks
+
+    @Logger()
+    @Cached()
+    def get_chunked_markdown_sources(self) -> List[Dict[str, Any]]:
+        # Get sources with markdown first
+        sources_with_markdown = self.get_sources_with_markdown()
+
+        chunked_sources = []
+
+        for url, source_data in sources_with_markdown.items():
+            markdown = source_data["markdown"]
+
+            # Split the markdown into chunks if needed
+            chunks = self._split_text(markdown)
+
+            # Add each chunk to the list
+            for i, chunk in enumerate(chunks):
+                chunked_sources.append({
+                        "url"     : url,
+                        "chunk"   : i,
+                        "markdown": chunk
+                })
+
+        Logger.note(f"Split sources into {len(chunked_sources)} chunks")
+        return chunked_sources
 
     @Logger()
     def get_summary(self) -> str:

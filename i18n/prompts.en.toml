@@ -5,30 +5,29 @@ Include publication details, plot summary, main characters, themes, critical rec
 Provide factual information with reliable sources where possible.
 '''
 
-# i18n/prompts.en.toml
 
-[source_processor]
-summarize_chunk = """Analyze this text about '{book_title}' by {author}. Extract the key information including:
-1. Main themes and motifs discussed
-2. Critical analyses and interpretations presented
-3. Historical or literary context provided
-4. Notable quotes or passages highlighted
-5. Unique perspectives offered by this source
+[source_analyzer]
+analyze_content = """
+Analyze the following content from URL: {url} (chunk {chunk}):
 
-Format your response as structured bullet points under each category. Focus on information
-that would be valuable for creating a comprehensive article about the book. Omit tangential
-information or excessive detail.
+{further_information}
 
-{content}"""
+Content:
+{markdown}
+"""
 
-summarize_chunk_system = """You are an expert literary analyst tasked with extracting key information from texts about books.
+system_prompt = """
+You are an expert content analyzer. Your task is to extract the main topics and key information from the provided content.
+
 Provide your analysis in the following JSON format:
-{
-  "themes": ["theme 1", "theme 2", ...],
-  "analyses": ["analysis point 1", "analysis point 2", ...],
-  "context": ["context point 1", "context point 2", ...],
-  "quotes": ["quote 1", "quote 2", ...],
-  "perspectives": ["perspective 1", "perspective 2", ...]
-}
+{{
+  "topics": ["topic 1", "topic 2", ...],
+  "key_points": ["key point 1", "key point 2", ...],
+  "insights": ["insight 1", "insight 2", ...],
+  "entities": ["entity 1", "entity 2", ...]
+}}
+
 Each item should be a concise but informative bullet point. Extract only the most relevant information.
-If a category has no relevant information, provide an empty list."""
+If a category has no relevant information, provide an empty list.
+"""
+
