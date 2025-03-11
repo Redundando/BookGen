@@ -41,7 +41,7 @@ class BookFinder(JSONCache):
                 return_citations=True
         )
 
-        llm.generate().wait_for_completion()
+        llm.execute().wait_for_completion()
 
         if llm.is_failed():
             error = llm.get_error()

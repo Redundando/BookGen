@@ -22,9 +22,11 @@ if __name__ == "__main__":
             title="The Hobbit",
             author="J.R.R. Tolkien"    )
 
-    info = book_finder.get_chunked_markdown_sources()[21]
+    print(book_finder.find_source_urls())
 
-    print(info)
+    info = book_finder.get_sources_with_markdown()
 
-    sa = SourceAnalyzer(url=info["url"], chunk=info["chunk"], markdown=info["markdown"])
-    print(sa.analyze())
+    #print(info)
+
+    #sa = SourceAnalyzer(url=info["url"], chunk=info["chunk"], markdown=info["markdown"])
+    #print(sa.analyze())

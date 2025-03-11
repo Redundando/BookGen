@@ -1,9 +1,9 @@
-from typing import Dict, Any, Optional, List
+
+import os
 from smartllm import SmartLLM
 from toml_i18n import i18n
 from logorator import Logger
 from cacherator import JSONCache, Cached
-from _config import ANTHROPIC_API_KEY
 from slugify import slugify
 
 
@@ -19,7 +19,7 @@ class SourceAnalyzer(JSONCache):
         self.chunk = chunk
         self.markdown = markdown
         self.further_information = further_information
-        self.api_key = ANTHROPIC_API_KEY
+        self.api_key = os.environ.get("ANTHROPIC_API_KEY")
         self.model = model
 
         # Initialize analysis result if not already in cache
@@ -32,7 +32,7 @@ class SourceAnalyzer(JSONCache):
 
     @Logger()
     @Cached(clear_cache=False)
-    def analyze(self) -> Dict[str, Any]:
+    def analyze(self):
         # If further information has changed, we need to reanalyze
         if self._cached_further_info != self.further_information:
             Logger.note(f"Further information changed, reanalyzing {self.url} chunk {self.chunk}")
@@ -50,7 +50,7 @@ class SourceAnalyzer(JSONCache):
         return self.analysis_result
 
     @Logger()
-    def _perform_analysis(self) -> Dict[str, Any]:
+    def _perform_analysis(self):
         # Get the prompt from i18n
         prompt = i18n("source_analyzer.analyze_content",
                       url=self.url,
@@ -61,21 +61,45 @@ class SourceAnalyzer(JSONCache):
         # Get the system prompt from i18n
         system_prompt = i18n("source_analyzer.system_prompt")
 
+        json_schema = {
+                "type"      : "object",
+                "properties": {
+                        "topics"    : {
+                                "type" : "array",
+                                "items": {"type": "string"}
+                        },
+                        "key_points": {
+                                "type" : "array",
+                                "items": {"type": "string"}
+                        },
+                        "insights"  : {
+                                "type" : "array",
+                                "items": {"type": "string"}
+                        },
+                        "entities"  : {
+                                "type" : "array",
+                                "items": {"type": "string"}
+                        }
+                },
+                "required"  : ["topics", "key_points", "insights", "entities"]
+        }
+
         # Create a SmartLLM instance
         llm = SmartLLM(
                 base="anthropic",
                 model=self.model,
                 api_key=self.api_key,
                 prompt=prompt,
-                system_prompt=system_prompt,
                 temperature=0.1,
-                json_mode=True,
-                max_input_tokens=15_000,
-                max_output_tokens=15_000
+                max_input_tokens=200_000,
+                max_output_tokens=15_000,
+                stream=True,
+                json_mode = True,
+                json_schema = json_schema
         )
 
         # Generate the analysis
-        llm.generate().wait_for_completion()
+        llm.execute().wait_for_completion()
 
         if llm.is_failed():
             error = llm.get_error()
@@ -83,4 +107,4 @@ class SourceAnalyzer(JSONCache):
             return {"error": error}
 
         Logger.note(f"Successfully analyzed {self.url} chunk {self.chunk}")
-        return llm.json_content
+        return llm.response

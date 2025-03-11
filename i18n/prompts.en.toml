@@ -10,6 +10,10 @@ Provide factual information with reliable sources where possible.
 analyze_content = """
 Analyze the following content from URL: {url} (chunk {chunk}):
 
+Each item should be a concise but informative bullet point. Extract only the most relevant information.
+If a category has no relevant information, provide an empty list.
+
+
 {further_information}
 
 Content:
@@ -17,17 +21,5 @@ Content:
 """
 
 system_prompt = """
-You are an expert content analyzer. Your task is to extract the main topics and key information from the provided content.
-
-Provide your analysis in the following JSON format:
-{{
-  "topics": ["topic 1", "topic 2", ...],
-  "key_points": ["key point 1", "key point 2", ...],
-  "insights": ["insight 1", "insight 2", ...],
-  "entities": ["entity 1", "entity 2", ...]
-}}
-
-Each item should be a concise but informative bullet point. Extract only the most relevant information.
-If a category has no relevant information, provide an empty list.
 """
 
