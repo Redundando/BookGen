@@ -11,8 +11,8 @@ from source_analyzer import SourceAnalyzer
 
 @Logger()
 def setup_i18n():
-    i18n_dir = Path(__file__).parent / "i18n"
-    TomlI18n.initialize(locale="en", fallback_locale="en", directory=str(i18n_dir))
+    #i18n_dir =
+    TomlI18n.initialize(locale="en", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
 
 
 if __name__ == "__main__":

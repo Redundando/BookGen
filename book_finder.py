@@ -1,24 +1,30 @@
 from typing import Dict, Any, Optional, List
 from smartllm import SmartLLM
-from toml_i18n import i18n
+from toml_i18n import i18n, TomlI18n
 from logorator import Logger
 from scraperator import Scraper
 from cacherator import JSONCache, Cached
 import concurrent.futures
+
+import _config
 from _config import PERPLEXITY_API_KEY
 from slugify import slugify
-
+from smart_spread import SmartSpread
 
 class BookFinder(JSONCache):
-    def __init__(self, title: str, author: str, model: str = "sonar-pro") -> None:
-        data_id = f"{slugify(title)}-{slugify(author)}-{slugify(model)}"
-        super().__init__(data_id=data_id, directory="data/book_finder")
 
-        self.title = title
-        self.author = author
+    DEFAULT_SEARCH_BASE = "perplexity"
+    DEFAULT_SEARCH_MODEL = "sonar-pro"
+
+    def __init__(self, sheet_id="", ttl=7, clear_cache=False) -> None:
+        self.sheet_id = sheet_id
+        data_id = f"{slugify(sheet_id)}"
+        super().__init__(data_id=data_id, directory="data/book_finder", ttl=ttl, clear_cache=clear_cache)
+
         self.api_key = PERPLEXITY_API_KEY
-        self.model = model
         self.max_chunk_size = 50 * 1024  # 50kB in bytes
+
+
 
         if not hasattr(self, "source_urls"):
             self.source_urls = []
@@ -27,14 +33,55 @@ class BookFinder(JSONCache):
         if not hasattr(self, "content"):
             self.content = ""
 
+    @property
+    @Cached()
+    def sheet(self)-> SmartSpread:
+        return SmartSpread(sheet_identifier=self.sheet_id, service_account_data=_config.SERVICE_ACCOUNT_KEY)
+
+    @property
+    @Cached()
+    def settings_tab(self):
+        return self.sheet.tab(tab_name="Settings", data_format="list")
+
+
+    @property
+    @Cached()
+    def settings(self):
+        result = {}
+        for data in self.settings_tab.data:
+            if len(data)>1:
+                result[str(data[0]).lower().replace(" ", "_")] = data[1]
+        return result
+
+    @property
+    def title(self):
+        return self.settings.get("title", None)
+
+    @property
+    def author(self):
+        return self.settings.get("author", None)
+
+    @property
+    def search_base(self):
+        return self.settings.get("search_base", self.DEFAULT_SEARCH_BASE)
+
+    @property
+    def search_model(self):
+        return self.settings.get("search_model", self.DEFAULT_SEARCH_MODEL)
+
+    @property
+    def search_api_key(self):
+        return self.settings.get("search_api_key", "")
+
     @Logger()
     @Cached()
+    @Logger()
     def find_source_urls(self) -> List[str]:
         prompt = i18n("book_finder.search", title=self.title, author=self.author)
 
         llm = SmartLLM(
-                base="perplexity",
-                model=self.model,
+                base=self.search_base,
+                model=self.search_model,
                 api_key=self.api_key,
                 prompt=prompt,
                 temperature=0.2,
@@ -55,6 +102,36 @@ class BookFinder(JSONCache):
         self.json_cache_save()
 
         return self.source_urls
+
+    @property
+    @Cached()
+    def sources_tab(self):
+        return self.sheet.tab(tab_name="Source URLs", data_format="list")
+
+    @Logger()
+    def save_source_urls(self):
+        tab = self.sources_tab
+        tab.data = [["URL"]]
+        for url in self.find_source_urls():
+            tab.data.append([url])
+        tab.write_data()
+
+    @Logger()
+    def load_source_urls(self):
+        tab = self.sources_tab
+        result = []
+        for row in tab.data[1:]:
+            result.append(row[0])
+        return result
+
+    @property
+    def sources(self                ):
+        result = self.load_source_urls()
+        if len(result)>0:
+            return result
+        self.find_source_urls()
+        self.save_source_urls()
+        return self.find_source_urls()
 
     @Logger()
     @Cached()
@@ -245,3 +322,9 @@ class BookFinder(JSONCache):
             self.find_source_urls()
 
         return self.content
+
+if __name__ == "__main__":
+    from pathlib import Path
+    TomlI18n.initialize(locale="en", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
+    th = BookFinder(sheet_id="1EDKq37ZH4BPuX0Fy_rnAt_JVlS9n0LPWJXE_ZCB7kiU", clear_cache=True)
+    print(th.sources)
