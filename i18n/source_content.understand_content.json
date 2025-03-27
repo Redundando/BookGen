@@ -1,0 +1,28 @@
+{
+  "type"      : "object",
+  "properties": {
+    "content_analysis": {
+      "type" : "array",
+      "items": {
+        "type"      : "object",
+        "properties": {
+          "content_name"   : {
+            "type": "string"
+          },
+          "coverage_rating": {
+            "type"   : "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "analysis_notes" : {
+            "type": "string"
+          }
+        },
+        "required"  : [
+          "content_name",
+          "coverage_rating"
+        ]
+      }
+    }
+  }
+}

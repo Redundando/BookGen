@@ -2,3 +2,5 @@
 /data/
 /cache/
 _config.py
+/service_account_key.json
+/exmp.py
