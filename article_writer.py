@@ -10,6 +10,10 @@ if TYPE_CHECKING:
     from book_generator import BookGenerator
 
 
+def _sanitize_markdown(markdown:str= ""):
+    return markdown.replace("```","").replace("markdown","")
+
+
 class ArticleWriter(JSONCache):
 
     def __init__(self, bg: "BookGenerator") -> None:
@@ -99,5 +103,5 @@ class ArticleWriter(JSONCache):
         markdown = ""
         for topic in (await self.topics()):
             markdown += (await topic.text_or_draft()) + "\n\n"
-        await self.google_doc_final_article.update_from_markdown(markdown_text=markdown)
+        await self.google_doc_final_article.update_from_markdown(markdown_text=_sanitize_markdown(markdown))
         self.book_generator.settings.set("Final Article", self.google_doc_final_article.url())

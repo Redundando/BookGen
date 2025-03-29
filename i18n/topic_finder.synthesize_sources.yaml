@@ -1,0 +1,38 @@
+type: object
+properties:
+  topics:
+    type: array
+    minItems: 6
+    maxItems: 20
+    items:
+      type: object
+      properties:
+        topic_name:
+          type: string
+        topic_notes:
+          type: string
+        order:
+          type: integer
+          minimum: 1
+          maximum: 100
+        word_count:
+          type: integer
+          minimum: 50
+          maximum: 750
+        sources:
+          type: array
+          minItems: 3
+          maxItems: 10
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+            required:
+              - url
+      required:
+        - topic_name
+        - topic_notes
+        - sources
+        - order
+        - word_count

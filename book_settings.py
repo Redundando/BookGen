@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 class BookSettings(JSONCache):
     DEFAULT_GENERAL_BASE = "anthropic"
     DEFAULT_GENERAL_MODEL = "claude-3-7-sonnet-20250219"
+    DEFAULT_WRITING_BASE = "openai"
+    DEFAULT_WRITING_MODEL = "gpt-4.5-preview"
     DEFAULT_SEARCH_BASE = "perplexity"
     DEFAULT_SEARCH_MODEL = "sonar-pro"
 
@@ -19,7 +21,7 @@ class BookSettings(JSONCache):
         self.sheet = self.book_generator.sheet
         data_id = f"{slugify(self.sheet.sheet_identifier)}"
         self.service_account_file = _config.SERVICE_ACCOUNT_KEY_FILE
-        super().__init__(data_id=data_id, directory="data/book_settings", ttl=self.book_generator.ttl, clear_cache=self.book_generator.clear_cache)
+        super().__init__(data_id=data_id, directory="data/book_settings", ttl=self.book_generator.ttl, clear_cache=True)
         self._excluded_cache_vars = ["search_api_key"]
 
 
@@ -42,6 +44,10 @@ class BookSettings(JSONCache):
     @property
     def author(self):
         return self._settings.get("author", None)
+
+    @property
+    def proposed_word_count(self):
+        return int(self._settings.get("proposed_word_count", 2000))
 
     @property
     def search_base(self):
@@ -68,8 +74,24 @@ class BookSettings(JSONCache):
         return self._settings.get("general_model", self.DEFAULT_GENERAL_MODEL)
 
     @property
+    def writing_base(self):
+        return self._settings.get("writing_base", self.DEFAULT_WRITING_BASE)
+
+    @property
+    def writing_model(self):
+        return self._settings.get("writing_model", self.DEFAULT_WRITING_MODEL)
+
+    @property
     def min_source_length(self):
-        return int(self._settings.get("min_source_length", self.DEFAULT_GENERAL_MODEL))
+        return int(self._settings.get("min_source_length", 2000))
+
+    @property
+    def urls_per_search(self):
+        return int(self._settings.get("urls_per_search", 7))
+
+    @property
+    def num_search_refinements(self):
+        return int(self._settings.get("num_search_refinements", 7))
 
     @property
     def final_article_url(self):

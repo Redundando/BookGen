@@ -1,23 +1,29 @@
 [source_finder]
-search = '''
+search = """Summary of the book "{title}" by "{author}"."""
+
+find_more_search_queries ="""
 I want to write a detailed in-depth article about the book "{title}" by {author}.
 
-Please find all relevant topics and sources about the book.
+I already gathered information from multiple sources about the book.
+Based on the information provided, can you please formulate {num_queries} different more refined search queries, to get in-depth information about the book and topics covered in the book, and surrounding the book.
 
-Include publication details, plot summary, main characters, themes, critical reception, and cultural impact.
-
-Provide factual information with reliable sources where possible.
-'''
-
+Source content so far: {sources}
+"""
 
 [source_content]
 understand_content = """
 I want to gather all available information about the book "{title}" by {author}.
-Analyze the content from URL: "{url}", pasted below as markdown.
 
-Provide which content is present on this page and on a scale of 0 - 10 grade how well it is covered.
+Analyze the content from URL: "{url}", pasted below as plain text.
 
-{further_information}
+Provide which topics are convered on this page and on a scale of 0 - 10 rate how well the content for each topic can be used as source of information for an in-depth article about the book.
+
+Rating scale:
+1 - specific content is useless  ...
+3 - specific content is irrelevant or not detailed ...
+5 - specific content contains some relevant bits for the ...
+7 - specific content can be used as source for this topic in combination with other sources  ...
+10 - specific content for this topic is detailed and enough to be used as a good source for an in-depth article
 
 Content:
 {markdown}
@@ -32,14 +38,18 @@ Based on the information provided, please suggest which topics the article shoul
 
 - 1st topic should be a short "About the book" paragraph without spoilers
 - 2nd topic should a plot summary (with spoilers)
-- (If applicable) 3rd topic should be a list of the key characters
-- (If applicable) 4th topic should cover the theme and setting
-- Follow up with any topic you deem relevant based on the sources
-- Reception, Adaptations and About the author should be the last topics
+- Follow up with all the topics you deem relevant based on the sources
+- Critical Reception (if available), Adaptations (if applicable) and About the author should be the last topics
+
+- The total length of all topics should be around {num_words} words
+- There should be NO topic covering reader reviews
 
 For each topic, please also provide:
-- which of the given URLs would be suitable to gather information about the topic
-- How many words you'd suggest to write about this specific topic
+- order: interger value, indicating the order of the topics
+- topic_name: proper Name / Headline for this topic
+- topic_notes: Short outline of what to cover in this topic
+- sources: which of the given URLs would be suitable to gather information about the topic
+- word_count: How many words you'd suggest to write about this specific topic
 
 Source Content: {sources}
 """
@@ -59,8 +69,8 @@ Below you can find several sources for this topic. Please use only information f
 - Focus ONLY on the topic "{topic}" (the other topics will be covered separately)
 - Answer only with markdown
 - The main headline for this section should be formated as h2 ("##")
-- Ensure the text is formatted properly with markdown (if applicable, use sub-headlines (### xyz), bullet lists (+ xyz), or ordered lists (1. xyz))
-- In case of explicitely mentioning sources, link to the source URL in text
+- Ensure the text is formatted properly with markdown (if applicable, use sub-headlines (### xyz), bullet lists (+ xyz), ordered lists (1. xyz), or tables)
+- If you mention sources by name, make the source name a clickable link (e.g. '... [https://...](source author name) remarks that ...')
 
 
 article_structure: {article_structure}
@@ -71,11 +81,12 @@ I am writing an extensive in-depth article about the book "{title}" by {author}.
 
 Please refine section {section_number} ("{topic}").
 
-- Reduce in length by 20%
 - Remove content from section {section_number} that is already present in previous sections
+- Ensure the content is not repetitive
 - Ensure the section fits the flow of the remaining article
 - Ensure no content from following sections is included in section {section_number}
-- Ensure the text is formatted properly with markdown (if applicable, use sub-headlines (### xyz), bullet lists (+ xyz), or ordered lists (1. xyz))
+- Ensure the text is formatted properly with markdown (if applicable, use sub-headlines (### xyz), bullet lists (+ xyz), ordered lists (1. xyz), or tables)
+- Never use vague sourcing (e.g. 'some critiques mention') - always name sources (if this isn't possible remove the passage)
 - If any source has been linked to in previous sections, you can unlink it in this one.
 - Answer with markdown only
 
@@ -91,10 +102,13 @@ language = """
  - Respond in English!
  - Write in a concise, journalistic style, similar to that of Reuters or The Associated Press, avoiding unnecessary adjectives or hyperbole.
  - Please present the information objectively, using precise, fact-driven language without subjective judgments or exaggerated descriptors.
+ - Use easy to understand language.
  - Use a journalistic tone of voice.
  - Vary the length of paragraphs significantly.
  - When possible, use gender-neutral language.
  - Never address the reader!
+ - Never use passive language, always active language.
+
 
  - Formatting: In case you mention names of books, movies, and TV shows inside text format them in italics: _xxx_
  - Formatting: In the case of quotation marks, always use English (curly) quotation marks: \"“\" and \"”\"

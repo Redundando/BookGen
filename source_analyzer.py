@@ -50,19 +50,37 @@ class SourceAnalyzer(JSONCache):
     @Logger()
     def _perform_analysis(self):
         # Get the prompt from i18n
-        prompt = i18n("source_analyzer.analyze_content", url=self.url, chunk=self.chunk, further_information=self.further_information, markdown=self.markdown)
+        prompt = i18n(
+            "source_analyzer.analyze_content",
+            url=self.url,
+            chunk=self.chunk,
+            further_information=self.further_information,
+            markdown=self.markdown)
 
         # Get the system prompt from i18n
         system_prompt = i18n("source_analyzer.system_prompt")
 
-        json_schema = {"type"                                                                        : "object", "properties": {"topics": {"type": "array", "items": {"type": "string"}},
-                "key_points"                                                                                                            : {"type": "array", "items": {"type": "string"}},
-                "insights"                                                                                                              : {"type": "array", "items": {"type": "string"}},
-                "entities"                                                                                                              : {"type": "array", "items": {"type": "string"}}},
-                "required": ["topics", "key_points", "insights", "entities"]}
+        json_schema = {
+                "type"      : "object",
+                "properties": {
+                        "topics"    : {"type": "array", "items": {"type": "string"}},
+                        "key_points": {"type": "array", "items": {"type": "string"}},
+                        "insights"  : {"type": "array", "items": {"type": "string"}},
+                        "entities"  : {"type": "array", "items": {"type": "string"}}},
+                "required"  : ["topics", "key_points", "insights", "entities"]}
 
         # Create a SmartLLM instance
-        llm = SmartLLM(base="anthropic", model=self.model, api_key=self.api_key, prompt=prompt, temperature=0.1, max_input_tokens=200_000, max_output_tokens=15_000, stream=True, json_mode=True, json_schema=json_schema)
+        llm = SmartLLM(
+            base="anthropic",
+            model=self.model,
+            api_key=self.api_key,
+            prompt=prompt,
+            temperature=0.1,
+            max_input_tokens=200_000,
+            max_output_tokens=15_000,
+            stream=True,
+            json_mode=True,
+            json_schema=json_schema)
 
         # Generate the analysis
         llm.execute().wait_for_completion()

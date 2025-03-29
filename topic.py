@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from docorator import Docorator
 from logorator import Logger
 from slugify import slugify
-from smartllm import AsyncSmartLLM
+from smartllm import AsyncLLM
 from toml_i18n import i18n
 
 if TYPE_CHECKING:
@@ -60,16 +60,26 @@ class Topic(JSONCache):
             Logger.note(f"Initializing Google Docs for Topic {self.name}")
             await self.google_doc_topic_draft.initialize()
             await self.google_doc_refined_topic_text.initialize()
-            await self._get_draft_from_google_doc()
-            await self._get_refined_text_from_google_doc()
+            if not self.book_generator.clear_cache:
+                await self._get_draft_from_google_doc()
+                await self._get_refined_text_from_google_doc()
             self._google_docs_initialized = True
+
+    def _source_urls_from_information(self):
+        result = []
+        for s in self.information.get("sources", []):
+            if isinstance(s, str):
+                result.append(s)
+            if isinstance(s, dict):
+                result.extend(s.get("url"))
+        return result
 
     @property
     def sources(self) -> list["SourceContent"]:
         if len(self._sources) == 0:
             self._sources = []
             for s in self.book_generator.sources:
-                source_urls = [s.get("url", None) for s in self.information.get("sources", [])]
+                source_urls = self._source_urls_from_information()
                 if s.url in source_urls:
                     self._sources.append(s)
         return self._sources
@@ -93,14 +103,14 @@ class Topic(JSONCache):
         return self._refined_text
 
     async def draft(self):
-        if len(self._draft) == 0:
+        if len(self._draft) == 0 and not self.book_generator.clear_cache:
             self._draft = await self._get_draft_from_google_doc()
         if len(self._draft) < 10:
             await self.write_draft_with_llm_and_save_to_google_doc()
         return self._draft
 
     async def refined_text(self):
-        if len(self._refined_text) == 0:
+        if len(self._refined_text) == 0 and not self.book_generator.clear_cache:
             self._refined_text = await self._get_refined_text_from_google_doc()
         if len(self._refined_text) < 10:
             await self.refine_draft_with_llm_and_save_to_google_doc()
@@ -131,19 +141,16 @@ class Topic(JSONCache):
                 details=self.details,
                 topic=self.name,
                 language=i18n("style.language"), )
-        llm = AsyncSmartLLM(
+        llm = AsyncLLM(
                 base=self.book_generator.settings.general_base,
                 model=self.book_generator.settings.general_model,
                 api_key=self.book_generator.settings.general_api_key,
                 prompt=prompt,
                 temperature=0.2,
                 max_input_tokens=200_000,
-                max_output_tokens=15_000,
+                max_output_tokens=50_000,
                 stream=True)
         await llm.execute()
-        if llm.is_failed():
-            Logger.note(f"LLM request failed: {llm.get_error()}")
-            return []
         self._draft = llm.response
         self.json_cache_save()
         return self._draft
@@ -158,19 +165,16 @@ class Topic(JSONCache):
                 article=article,
                 topic=self.name,
                 language=i18n("style.language"), )
-        llm = AsyncSmartLLM(
+        llm = AsyncLLM(
                 base=self.book_generator.settings.general_base,
                 model=self.book_generator.settings.general_model,
                 api_key=self.book_generator.settings.general_api_key,
                 prompt=prompt,
                 temperature=0.2,
                 max_input_tokens=200_000,
-                max_output_tokens=15_000,
+                max_output_tokens=50_000,
                 stream=True)
         await llm.execute()
-        if llm.is_failed():
-            Logger.note(f"LLM request failed: {llm.get_error()}")
-            return []
         self._refined_text = llm.response
         self.json_cache_save()
         return self._refined_text
