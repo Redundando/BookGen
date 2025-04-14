@@ -39,7 +39,7 @@ Based on the information provided, please suggest which topics the article shoul
 - 1st topic should be a short "About the book" paragraph without spoilers
 - 2nd topic should a plot summary (with spoilers)
 - Follow up with all the topics you deem relevant based on the sources
-- Critical Reception (if available), Adaptations (if applicable) and About the author should be the last topics
+- Critical Reception (if available), Adaptations (if available) and About the Author should be the last topics
 
 - The total length of all topics should be around {num_words} words
 - There should be NO topic covering reader reviews
@@ -47,8 +47,8 @@ Based on the information provided, please suggest which topics the article shoul
 For each topic, please also provide:
 - order: interger value, indicating the order of the topics
 - topic_name: proper Name / Headline for this topic
-- topic_notes: Short outline of what to cover in this topic
-- sources: which of the given URLs would be suitable to gather information about the topic
+- topic_notes: Short outline of what to cover in this topic (Write this as a prompt that generates the section based on the sources)
+- sources: which of the given URLs would be suitable to gather information about the topic (use 4 or more source URLs)
 - word_count: How many words you'd suggest to write about this specific topic
 
 Source Content: {sources}
@@ -67,11 +67,12 @@ Below you can find several sources for this topic. Please use only information f
 - The intended audience for this article are pupils and students
 - Please write roughly {word_count} words
 - Focus ONLY on the topic "{topic}" (the other topics will be covered separately)
+- If possible and applicable include direct quotes or specific scenes to support the analysis
+- If the topic is an analysis section: Rely on show rather then tell - use examples to demonstrate claims
 - Answer only with markdown
 - The main headline for this section should be formated as h2 ("##")
-- Ensure the text is formatted properly with markdown (if applicable, use sub-headlines (### xyz), bullet lists (+ xyz), ordered lists (1. xyz), or tables)
-- If you mention sources by name, make the source name a clickable link (e.g. '... [https://...](source author name) remarks that ...')
-
+- Ensure the text is formatted properly with markdown (if applicable, use sub-headlines (### xyz, or #### xyz), lists, or tables)
+- Do not mention sources.
 
 article_structure: {article_structure}
 source_information: {source_information}
@@ -82,13 +83,14 @@ I am writing an extensive in-depth article about the book "{title}" by {author}.
 Please refine section {section_number} ("{topic}").
 
 - Remove content from section {section_number} that is already present in previous sections
-- Ensure the content is not repetitive
+- Ensure the content is not repetitive (in case it is, remove repetitions)
 - Ensure the section fits the flow of the remaining article
 - Ensure no content from following sections is included in section {section_number}
-- Ensure the text is formatted properly with markdown (if applicable, use sub-headlines (### xyz), bullet lists (+ xyz), ordered lists (1. xyz), or tables)
 - Never use vague sourcing (e.g. 'some critiques mention') - always name sources (if this isn't possible remove the passage)
-- If any source has been linked to in previous sections, you can unlink it in this one.
+- Do not mention sources.
 - Answer with markdown only
+
+- If the topic covers the reception: offer specific content about what critics actually praised about the book.
 
 Follow these language guidelines:
 
@@ -108,6 +110,8 @@ language = """
  - When possible, use gender-neutral language.
  - Never address the reader!
  - Never use passive language, always active language.
+ - Use direct phrasing.
+ - Avoid stilted prose.
 
 
  - Formatting: In case you mention names of books, movies, and TV shows inside text format them in italics: _xxx_

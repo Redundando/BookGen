@@ -1,6 +1,6 @@
-import json
 from pathlib import Path
 from typing import TYPE_CHECKING
+
 import yaml
 from cacherator import JSONCache
 from ghostscraper import GhostScraper
@@ -25,7 +25,12 @@ class SourceContent(JSONCache):
                 clear_cache=self.book_generator.clear_cache,
                 ttl=self.book_generator.ttl)
         self.url = url
-        self.scraper = GhostScraper(url=url, clear_cache=self.book_generator.clear_cache, ttl=self.book_generator.ttl)
+        self.scraper = GhostScraper(
+            url=url,
+            clear_cache=self.book_generator.clear_cache,
+            ttl=self.book_generator.ttl,
+            load_timeout=15000,
+            max_retries=2)
         self.email_sharing = self.book_generator.settings.email
         self.title = self.book_generator.settings.title
 
@@ -36,7 +41,10 @@ class SourceContent(JSONCache):
         return self.__str__()
 
     async def _get_text_from_scrape(self):
-        return await self.scraper.text()
+        text = await self.scraper.text()
+        self.scraper.json_cache_save()
+        self.json_cache_save()
+        return text
 
     async def text(self):
         if self._text is None:
@@ -69,14 +77,16 @@ class SourceContent(JSONCache):
                 json_mode=True,
                 json_schema=json_schema)
         await llm.execute()
+        llm.json_cache_save()
         return llm.response
 
     async def content_analysis(self):
         if self._content_analysis is None:
-            if self.is_long_enough_for_analysis():
+            if await self.is_long_enough_for_analysis():
                 self._content_analysis = await self._get_content_analysis_from_llm()
+                self.json_cache_save()
             else:
-                self._content_analysis = []
+                self._content_analysis = {}
         return self._content_analysis
 
     async def is_long_enough_for_analysis(self):
@@ -84,8 +94,6 @@ class SourceContent(JSONCache):
 
     async def source_summary(self):
         result = []
-        if self.content_analysis is None or self.content_analysis == []:
-            return []
         content_analysis = await self.content_analysis()
         for item in content_analysis.get("content_analysis", []):
             try:
@@ -93,6 +101,17 @@ class SourceContent(JSONCache):
                 coverage_rating = item.get("coverage_rating", "No Rating")
                 analysis_notes = item.get("analysis_notes", "No Notes")
                 result.append({"url": self.url, "content_name": content_name, "coverage_rating": coverage_rating, "analysis_notes": analysis_notes})
+            except Exception as e:
+                Logger.note(f"{e}")
+        return result
+
+    async def interesting_facts(self):
+        result = []
+        content_analysis = await self.content_analysis()
+        for item in content_analysis.get("interesting_facts", []):
+            try:
+                fact = item.get("fact", "")
+                result.append(fact)
             except Exception as e:
                 Logger.note(f"{e}")
         return result

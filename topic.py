@@ -36,6 +36,7 @@ class Topic(JSONCache):
         self.details = self.information.get("topic_notes", "")
         self.order = self.information.get("order", 0)
         self.suggested_length = self.information.get("word_count", 0)
+        self.source_urls = [s.strip() for s in self.information.get("sources", "").split(",")]
 
         self.google_doc_topic_draft = Docorator(
                 service_account_file=self.book_generator.settings.service_account_file,
@@ -65,21 +66,12 @@ class Topic(JSONCache):
                 await self._get_refined_text_from_google_doc()
             self._google_docs_initialized = True
 
-    def _source_urls_from_information(self):
-        result = []
-        for s in self.information.get("sources", []):
-            if isinstance(s, str):
-                result.append(s)
-            if isinstance(s, dict):
-                result.extend(s.get("url"))
-        return result
-
     @property
     def sources(self) -> list["SourceContent"]:
         if len(self._sources) == 0:
             self._sources = []
             for s in self.book_generator.sources:
-                source_urls = self._source_urls_from_information()
+                source_urls = self.source_urls
                 if s.url in source_urls:
                     self._sources.append(s)
         return self._sources
@@ -88,7 +80,7 @@ class Topic(JSONCache):
         if len(self._source_information) == 0:
             self._source_information = []
             for source in self.sources:
-                row = {"url": source.url, "text": await source.get_text()}
+                row = {"url": source.url, "text": await source.text()}
                 self._source_information.append(row)
         return self._source_information
 
@@ -103,14 +95,14 @@ class Topic(JSONCache):
         return self._refined_text
 
     async def draft(self):
-        if len(self._draft) == 0 and not self.book_generator.clear_cache:
+        if len(self._draft) == 0:
             self._draft = await self._get_draft_from_google_doc()
         if len(self._draft) < 10:
             await self.write_draft_with_llm_and_save_to_google_doc()
         return self._draft
 
     async def refined_text(self):
-        if len(self._refined_text) == 0 and not self.book_generator.clear_cache:
+        if len(self._refined_text) == 0:
             self._refined_text = await self._get_refined_text_from_google_doc()
         if len(self._refined_text) < 10:
             await self.refine_draft_with_llm_and_save_to_google_doc()
@@ -129,8 +121,8 @@ class Topic(JSONCache):
 
     async def _write_draft_with_llm(self):
         source_information = await self.source_information()
-        article_structure = await self.book_generator.topic_finder.get_article_structure()
-        word_count = self.information.get("word_count", 100)
+        article_structure = self.book_generator.article_writer.article_structure
+        word_count = self.suggested_length
         prompt = i18n(
                 "topic.write_draft",
                 title=self.book_generator.settings.title,
@@ -142,9 +134,9 @@ class Topic(JSONCache):
                 topic=self.name,
                 language=i18n("style.language"), )
         llm = AsyncLLM(
-                base=self.book_generator.settings.general_base,
-                model=self.book_generator.settings.general_model,
-                api_key=self.book_generator.settings.general_api_key,
+                base=self.book_generator.settings.writing_base,
+                model=self.book_generator.settings.writing_model,
+                api_key=self.book_generator.settings.writing_api_key,
                 prompt=prompt,
                 temperature=0.2,
                 max_input_tokens=200_000,
@@ -156,19 +148,19 @@ class Topic(JSONCache):
         return self._draft
 
     async def _refine_topic_with_llm(self):
-        article = await self.book_generator.article_writer.full_text_or_draft()
+        article = await self.book_generator.article_writer.full_article_draft()
+
         prompt = i18n(
                 "topic.refine_text",
                 title=self.book_generator.settings.title,
                 author=self.book_generator.settings.author,
                 section_number=self.order,
                 article=article,
-                topic=self.name,
-                language=i18n("style.language"), )
+                topic=self.name)
         llm = AsyncLLM(
-                base=self.book_generator.settings.general_base,
-                model=self.book_generator.settings.general_model,
-                api_key=self.book_generator.settings.general_api_key,
+                base=self.book_generator.settings.writing_base,
+                model=self.book_generator.settings.writing_model,
+                api_key=self.book_generator.settings.writing_api_key,
                 prompt=prompt,
                 temperature=0.2,
                 max_input_tokens=200_000,
@@ -177,6 +169,30 @@ class Topic(JSONCache):
         await llm.execute()
         self._refined_text = llm.response
         self.json_cache_save()
+
+
+        prompt_language = i18n(
+                "topic.refine_language",
+                title=self.book_generator.settings.title,
+                author=self.book_generator.settings.author,
+                topic=self.name,
+                section=self._refined_text,
+                language=i18n("style.language"))
+
+        llm_language = AsyncLLM(
+                base=self.book_generator.settings.writing_base,
+                model=self.book_generator.settings.writing_model,
+                api_key=self.book_generator.settings.writing_api_key,
+                prompt=prompt_language,
+                temperature=0.2,
+                max_input_tokens=200_000,
+                max_output_tokens=50_000,
+                stream=True)
+        await llm_language.execute()
+
+        self._refined_text = llm_language.response
+        self.json_cache_save()
+
         return self._refined_text
 
     async def write_draft_with_llm_and_save_to_google_doc(self):

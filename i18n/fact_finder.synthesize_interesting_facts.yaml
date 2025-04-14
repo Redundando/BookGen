@@ -1,0 +1,8 @@
+type: object
+properties:
+  interesting_facts:
+    type: array
+    minItems: 0
+    maxItems: 15
+    items:
+      type: string

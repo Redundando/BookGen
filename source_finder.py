@@ -2,13 +2,14 @@ import asyncio
 from pathlib import Path
 from typing import List, TYPE_CHECKING
 
-from searcherator import Searcherator
 import yaml
 from cacherator import Cached, JSONCache
 from logorator import Logger
+from searcherator import Searcherator
 from slugify import slugify
 from smartllm import AsyncLLM
 from toml_i18n import i18n
+
 from source_content import SourceContent
 
 if TYPE_CHECKING:
@@ -19,7 +20,6 @@ class SourceFinder(JSONCache):
     MIN_LENGTH_TO_BE_VIABLE = 2000  # chars
 
     def __init__(self, bg: "BookGenerator") -> None:
-
         self.book_generator = bg
         self.sheet_identifier = self.book_generator.sheet_identifier
         data_id = f"{slugify(self.sheet_identifier)}"
@@ -29,8 +29,6 @@ class SourceFinder(JSONCache):
         self._sources: list[SourceContent] = []
         self._refined_queries: list[str] = []
         self._excluded_cache_vars = ["api_key"]
-
-
 
     def __str__(self):
         return f"SourceFinder ({self.book_generator.settings.title})"
@@ -86,10 +84,14 @@ class SourceFinder(JSONCache):
         tab.write_data(overwrite_tab=True)
 
     @Logger()
-    async def _find_source_urls(self, prompt:str|None=None) -> List[str]:
+    async def _find_source_urls(self, prompt: str | None = None) -> List[str]:
         if prompt is None:
             prompt = i18n("source_finder.search", title=self.book_generator.settings.title, author=self.book_generator.settings.author)
-        search = Searcherator(prompt, num_results=self.book_generator.settings.urls_per_search)
+        search = Searcherator(
+            prompt,
+            num_results=self.book_generator.settings.urls_per_search,
+            language=self.book_generator.settings.language,
+            country=self.book_generator.settings.country)
         result = await search.urls()
         Logger.note(f"Found information '{prompt}' with {len(result)} sources")
         return result
@@ -98,10 +100,12 @@ class SourceFinder(JSONCache):
     def source_urls(self):
         return self._source_urls
 
-
     @property
+    @Cached(clear_cache=True)
     def source_contents(self) -> list[SourceContent]:
         result = []
+        if len(self.source_urls) == 0:
+            self._source_urls = self._load_source_urls_from_sheet()
         for url in self.source_urls:
             sc = SourceContent(url=url, bg=self.book_generator)
             result.append(sc)
@@ -121,21 +125,20 @@ class SourceFinder(JSONCache):
         tab.data.sort(key=lambda x: x.get("coverage_rating"), reverse=True)
         tab.write_data(overwrite_tab=True)
 
-
     @Logger()
     async def find_more_search_queries_for_topic(self):
         prompt = i18n(
                 "source_finder.find_more_search_queries",
                 title=self.book_generator.settings.title,
                 author=self.book_generator.settings.author,
-                num_queries = self.book_generator.settings.num_search_refinements,
+                num_queries=self.book_generator.settings.num_search_refinements,
                 sources=(await self.source_summary()))
         with open(str(Path(__file__).parent / "i18n/source_finder.find_more_search_queries.yaml"), "r") as f:
             schema = yaml.safe_load(f)
 
         llm = AsyncLLM(
-                base=self.book_generator.settings.writing_base,
-                model=self.book_generator.settings.writing_model,
+                base=self.book_generator.settings.general_base,
+                model=self.book_generator.settings.general_model,
                 api_key=self.book_generator.settings.general_api_key,
                 prompt=prompt,
                 temperature=0.2,

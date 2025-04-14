@@ -1,0 +1,177 @@
+[source_finder]
+search = """Zusammenfassung des Buches "{title}" von "{author}"."""
+
+find_more_search_queries ="""
+Ich möchte einen detaillierten, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben.
+
+Ich habe bereits Informationen aus mehreren Quellen über das Buch gesammelt.
+Basierend auf den bereitgestellten Informationen, könntest du bitte {num_queries} verschiedene, verfeinerte Suchanfragen formulieren, um tiefgreifende Informationen über das Buch, die darin behandelten Themen und das Umfeld des Buches zu erhalten.
+
+Antworte auf Deutsch.
+
+Bisherige Quelleninhalte: {sources}
+"""
+
+[source_content]
+understand_content = """
+Ich möchte alle verfügbaren Informationen über das Buch "{title}" von {author} sammeln.
+
+Analysiere den Inhalt von URL: "{url}", der unten als Klartext eingefügt ist.
+
+Gib an, welche Themen auf dieser Seite behandelt werden und bewerte auf einer Skala von 0 - 10, wie gut der Inhalt für jedes Thema als Informationsquelle für einen Artikel über das Buch "{title}" von {author} oder über Adaptionen des Buches genutzt werden kann.
+
+Bewertungsskala:
+1 - spezifischer Inhalt ist nutzlos ...
+3 - spezifischer Inhalt hat nichts mit dem Buch oder Adaptionen zu run oder nicht detailliert ...
+5 - spezifischer Inhalt enthält einige relevante Teile für das Buch ...
+7 - spezifischer Inhalt kann als Quelle für einen Artikel über das Buch in Kombination mit anderen Quellen verwendet werden ...
+10 - spezifischer Inhalt für dieses Thema ist detailliert und ausreichend, um als gute Quelle für einen tiefgehenden Artikel über "{title}"zu dienen
+
+Antworte auf Deutsch.
+
+Für jedes Thema gib an:
+- content_name: Name des Themas
+- coverage_rating: Bewertung des Themas
+- analysis_notes: Kurze Zusammenfassung, wie sich dieses Thema in einen Artikel über das Buch "{title}" einfügen könnte.
+
+Fasse zusätzlich alle interessanten Fakten die du zu dem Buch "{title}" auf dieser Seite finden kannst in jeweils einem kurzen Satz zusammen.
+
+Inhalt:
+{markdown}
+"""
+
+[topic_finder]
+synthesize_sources = """
+Ich möchte einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben.
+
+Ich habe alle verfügbaren Informationen über das Buch gesammelt, indem ich mehrere Webseiten analysiert habe. Die Informationen findest du unten.
+Basierend auf den bereitgestellten Informationen, schlage bitte vor, welche Themen der Artikel abdecken sollte.
+
+- Das 1. Thema sollte ein kurzer "Über das Buch" Absatz ohne Spoiler sein
+- Das 2. Thema sollte eine Zusammenfassung der Handlung (mit Spoilern) sein
+- Folgend kommen alle Themen, die du basierend auf den Quellen für relevant hältst
+- Diese Themen können am Ende erscheinen:
+    - Kritische Rezeption (falls verfügbar)
+    - Adaptionen (falls verfügbar)
+- Das letzte Thema muss Über den Autor / die Autorin sein
+
+- Die Gesamtlänge aller Themen sollte etwa {num_words} Wörter betragen
+- Es sollte KEIN Thema geben, das Leserbewertungen abdeckt
+
+Für jedes Thema gib bitte an:
+- order: Ganzzahlwert, der die Reihenfolge der Themen angibt
+- topic_name: Richtiger Name / Überschrift für dieses Thema
+- topic_notes: Kurze Skizze dessen, was in diesem Thema behandelt werden soll (Schreibe dies als Prompt, welcher den Abschnitt basierend auf den Quellen generiert)
+- sources: welche der angegebenen URLs wären geeignet, um Informationen zu diesem Thema zu sammeln (verwende 4 oder mehr Quellen-URLs)
+- word_count: Wie viele Wörter du vorschlägst, über dieses spezifische Thema zu schreiben
+
+Quelleninhalte: {sources}
+"""
+
+[fact_finder]
+synthesize_facts = """
+Ich möchte einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben.
+
+Dazu habe ich von mehreren Quellen verschiedene interessante Fakten zu dem Buch zusammengetragen.
+
+- Fasse bitte diese Fakten in einer Liste zusammen.
+- Die Liste darf maximal 12 Fakten umfassen.
+- Diese Liste sollte nur Fakten enthalten, die mit dem Buch, dem Autor / der Autorin oder Adaptionen zu tun haben.
+- Fasse inhaltlist ähnliche Fakten zusammen.
+- Jeder einzelne Fakt soll nur ein kurzer Satz sein.
+- Beschränke dich auf Fakten, die sehr wahrscheinlich der Realität entsprechen.
+- Sortiere die Liste so, dass die interessantesten und relevantesten Fakten oben stehen.
+
+Fakten: {facts}
+
+"""
+
+get_key_facts = """
+Ich möchte einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben.
+
+Gib mir dazu bitte folgende Fakten:
+- Datum der Ersterscheinung
+- Genres
+- Handlungszeitraum
+- Zentrale Themen des Buches
+
+"""
+
+organize_key_facts = """
+Ich möchte einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben. Dazu habe ich ein paar Fakten gesammelt.
+
+Fasse diese bitte in als JSON zusammen:
+
+first_published: Datum der Ersterscheinung
+genres: List der Genres
+temporal_setting: Zeitraum der Handlung
+main_themes: Zentrale Themen des Buches (jedes einzelne Thema sollte aus maximal 3 Worten bestehen)
+
+Gesammelte Fakten: {facts}
+
+"""
+
+[topic]
+write_draft = """
+Ich möchte einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben. Unten findest du meine Artikelstruktur.
+
+Könntest du bitte den Abschnitt zum Thema "{topic}" schreiben.
+
+Themendetails: {details}
+
+Unten findest du mehrere Quellen für dieses Thema. Bitte verwende nur Informationen aus diesen Quellen.
+
+- Die Zielgruppe für diesen Artikel sind Schüler und Studierende
+- Bitte schreibe ungefähr {word_count} Wörter
+- Konzentriere dich NUR auf das Thema "{topic}" (die anderen Themen werden separat behandelt)
+- Wenn möglich und zutreffend, füge direkte Zitate oder spezifische Szenen ein, um die Analyse zu unterstützen
+- Wenn es sich bei dem Thema um einen Analyseabschnitt handelt: Verlasse dich eher auf Zeigen als auf Erzählen - verwende Beispiele, um Behauptungen zu belegen
+- Antworte nur mit Markdown
+- Die Hauptüberschrift für diesen Abschnitt sollte als h2 ("##") formatiert sein
+- Stelle sicher, dass der Text ordnungsgemäß mit Markdown formatiert ist (verwende gegebenenfalls Unterüberschriften (### xyz oder #### xyz), Listen oder Tabellen)
+- Erwähne keine Quellen.
+- Ziehe niemals ein Fazit oder Zusammenfassung.
+
+article_structure: {article_structure}
+source_information: {source_information}
+"""
+refine_text = """
+Ich schreibe einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author}. Unten findest du meinen Artikelentwurf.
+
+Bitte überarbeite Abschnitt {section_number} ("{topic}").
+
+- Stelle sicher, dass der Abschnitt zum Fluss des restlichen Artikels passt
+- Verwende niemals vage Quellenangaben (z.B. 'einige Kritiker erwähnen')
+- Erwähne keine Quellen.
+- Abschnitte dürfen keine Zwischenüberschrift mit dem Wort "Einleitung" haben
+- Ziehe niemals ein Fazit oder Zusammenfassung.
+
+- Stelle sicher, dass der Text ordnungsgemäß mit Markdown formatiert ist
+
+- Wenn das Thema die Rezeption behandelt: biete spezifische Inhalte darüber, was Kritiker loben oder kritisieren.
+
+article_draft: {article}
+"""
+
+refine_language = """
+Ich schreibe einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author}. Unten findest du einen Abschnitt dieses Artikels.
+
+Bitte überarbeite die Sprache wie folgt:
+
+{language}
+
+section: {section}
+
+"""
+
+[style]
+language = """
+ - Antworte auf Deutsch!
+ - Vermeide unnötige Adjektive und Übertreibungen.
+ - Sprich den Leser niemals direkt an!
+ - Verwende niemals Passivsprache, stets aktive sprache.
+
+ - Formatierung: Falls du Namen von Büchern, Filmen und Fernsehsendungen im Text erwähnst, formatiere sie kursiv: _xxx_
+ - Formatierung: Bei Anführungszeichen verwende immer deutsche (geschwungene) Anführungszeichen: \"„\" und \"“\"
+
+"""

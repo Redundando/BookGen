@@ -19,3 +19,14 @@ properties:
         - content_name
         - coverage_rating
         - analysis_notes
+  interesting_facts:
+    type: array
+    minItems: 0
+    maxItems: 20
+    items:
+      type: object
+      properties:
+        fact:
+          type: string
+      required:
+        - fact

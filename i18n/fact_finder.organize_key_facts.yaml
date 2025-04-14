@@ -1,0 +1,18 @@
+type: object
+properties:
+  first_published:
+    type: string
+  genres:
+    type: array
+    minItems: 0
+    maxItems: 7
+    items:
+      type: string
+  temporal_setting:
+    type: string
+  main_themes:
+    type: array
+    minItems: 0
+    maxItems: 7
+    items:
+      type: string

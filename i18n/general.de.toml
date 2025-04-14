@@ -1,0 +1,9 @@
+[general]
+title = "Titel"
+author = "Autor"
+first_published = "Erschienen"
+temporal_setting = "Handlungszeitraum"
+themes = "Themen"
+genres = "Genres"
+
+interesting_facts = "Wissenswertes zu *{title}*"

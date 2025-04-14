@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from cacherator import Cached, JSONCache
 from slugify import slugify
+
 import _config
 
 if TYPE_CHECKING:
@@ -24,7 +25,6 @@ class BookSettings(JSONCache):
         super().__init__(data_id=data_id, directory="data/book_settings", ttl=self.book_generator.ttl, clear_cache=True)
         self._excluded_cache_vars = ["search_api_key"]
 
-
     @property
     @Cached()
     def _settings_tab(self):
@@ -44,6 +44,15 @@ class BookSettings(JSONCache):
     @property
     def author(self):
         return self._settings.get("author", None)
+
+    @property
+    def language(self):
+        return self._settings.get("language", "en")
+
+    @property
+    def country(self):
+        return self._settings.get("country", "US").upper()
+
 
     @property
     def proposed_word_count(self):
@@ -74,12 +83,44 @@ class BookSettings(JSONCache):
         return self._settings.get("general_model", self.DEFAULT_GENERAL_MODEL)
 
     @property
+    def general_api_key(self):
+        result = self._settings.get("general_api_key", "")
+        if result == "":
+            import os
+            result = os.environ.get("ANTHROPIC_API_KEY")
+        return result
+
+    @property
+    def complex_base(self):
+        return self._settings.get("complex_base", self.DEFAULT_GENERAL_BASE)
+
+    @property
+    def complex_model(self):
+        return self._settings.get("complex_model", self.DEFAULT_GENERAL_MODEL)
+
+    @property
+    def complex_api_key(self):
+        result = self._settings.get("complex_api_key", "")
+        if result == "":
+            import os
+            result = os.environ.get("ANTHROPIC_API_KEY")
+        return result
+
+    @property
     def writing_base(self):
         return self._settings.get("writing_base", self.DEFAULT_WRITING_BASE)
 
     @property
     def writing_model(self):
         return self._settings.get("writing_model", self.DEFAULT_WRITING_MODEL)
+
+    @property
+    def writing_api_key(self):
+        result = self._settings.get("general_api_key", "")
+        if result == "":
+            import os
+            result = os.environ.get("ANTHROPIC_API_KEY")
+        return result
 
     @property
     def min_source_length(self):
@@ -100,11 +141,3 @@ class BookSettings(JSONCache):
     def set(self, key="", value=""):
         self._settings_tab.update_row_by_column_pattern(column="Key", value=key, updates={"Value": value})
         self._settings_tab.write_data()
-
-    @property
-    def general_api_key(self):
-        result = self._settings.get("general_api_key", "")
-        if result == "":
-            import os
-            result = os.environ.get("ANTHROPIC_API_KEY")
-        return result
