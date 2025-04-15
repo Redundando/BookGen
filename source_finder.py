@@ -1,5 +1,6 @@
 import asyncio
 from pathlib import Path
+from trace import Trace
 from typing import List, TYPE_CHECKING
 
 import yaml

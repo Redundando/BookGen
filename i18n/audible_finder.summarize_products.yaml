@@ -1,0 +1,14 @@
+type: object
+properties:
+  audible_products:
+    type: array
+    items:
+      type: object
+      properties:
+        asin:
+          type: string
+        description:
+          type: string
+      required:
+        - asin
+        - description

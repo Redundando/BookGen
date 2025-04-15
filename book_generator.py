@@ -12,6 +12,8 @@ import book_settings
 import source_finder
 import topic_finder
 import fact_finder
+import audible_finder
+
 
 def setup_toml18n():
     TomlI18n.initialize(locale="en", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
@@ -58,6 +60,11 @@ class BookGenerator(JSONCache):
 
     @property
     @Cached()
+    def audible_finder(self):
+        return audible_finder.AudibleFinder(bg=self)
+
+    @property
+    @Cached()
     def article_writer(self):
         return article_writer.ArticleWriter(bg=self)
 
@@ -68,15 +75,16 @@ class BookGenerator(JSONCache):
         TomlI18n.initialize(locale=self.settings.language, fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
         await self.source_finder.run()
         await self.topic_finder.run()
+        await self.audible_finder.run()
         await self.article_writer.run()
-        # print(self.sources)
-        # print(await self.fact_finder.interesting_facts_list())
+
 
 
 async def main():
     # darius = BookGenerator(sheet_identifier="1oFqIAaPjAdsbxmrhInJS7Cnp5OOFc9BByZl2dc-AuME", clear_cache=False)
     # madonna = BookGenerator(sheet_identifier="1g3Cf6N0-8Mh_O0Nd3Rufq3WrAC5mzQikZftnXLtqZAU", clear_cache=False)
-    # tadzio = BookGenerator(sheet_identifier="1feDCEKGi2AFHt6kw5-nntrvJTNFM_1GpzzrEvc6QGrU", clear_cache=False)
+    # tadzio = BookGenerator(sheet_identifier="1tW-Pbbq6pJ908LFtRaahvtiV2DX7bzLm1_heSDDK7U8", clear_cache=False)
+    #demian = BookGenerator(sheet_identifier="1T5iww2OoBP_oxwL6rAEa4TtKOo2D0s44JbV-mX91ZMM")
     # cats = BookGenerator(sheet_identifier="1mciIdQdovAsyxFeuGnzxvjqpLOtOCymofuk-swGv11k", clear_cache=False)
     # minds = BookGenerator(sheet_identifier="18FUR96CoCmKafrgoiZ0qzPSGeQv4nsHnOANil_-qfXk", clear_cache=True)
     # mom = BookGenerator(sheet_identifier="1Luzg3NKFbnlfLmnvxitbMakumxL7d-cLJ5q2JLsvJBk", clear_cache=True)
@@ -87,9 +95,11 @@ async def main():
     # mind = BookGenerator(sheet_identifier="1133H4NgWjZHSw4Tdu74bDVX8iZ4M9Urf6Gjiueyr-xo")
     # giovanni = BookGenerator(sheet_identifier="1h8rmkpk0mlJ5ltfkFIGJJAWkDwn4EndA1jP6ejrKXyo")
     # dschinns = BookGenerator(sheet_identifier="15Lak0d3OQzBtuYiBJo1b80m1GdBt-OhOyrJvsHiiCfo", clear_cache=False)
-    welt = BookGenerator(sheet_identifier="1RUQniXmt6TBE-It5SktaDGedFZXkStBpA4Bs8WopNRM", clear_cache=False)
+    # welt = BookGenerator(sheet_identifier="1RUQniXmt6TBE-It5SktaDGedFZXkStBpA4Bs8WopNRM", clear_cache=False)
     # pinky = BookGenerator(sheet_identifier="1Yxj636li7BBBZf0kkepLU6lF9D_0gNQM-ZMaBDrvhuQ", clear_cache=False)
-    await welt.run()
+    # orwell = BookGenerator(sheet_identifier="1sD6aVxlUpytrdcnugPb40eR4ObY4tCAjWH3kavkkO5Q")
+    anders = BookGenerator(sheet_identifier="1LxrgsfsA5-pRKGwRPFxahgL3yAzLG_NVUtYvTrKo4LI")
+    await anders.run()
 
 
 

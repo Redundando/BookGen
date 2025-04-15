@@ -175,3 +175,38 @@ language = """
  - Formatierung: Bei Anführungszeichen verwende immer deutsche (geschwungene) Anführungszeichen: \"„\" und \"“\"
 
 """
+
+[audible_page]
+analyse = """
+Unten findest du die relevantsten Informationen, die auf der Seite {url} zu finden sind. Handelt es sich hierbei wahrscheinlich um ein Hörbuch, Höspiel oder eine Adaption des Buches {title} von {author}?
+
+page_information: {information}
+"""
+
+[audible_finder]
+summarize_products = """
+Ich schreibe einen ausführlichen Artikel über das Buch "{title}" von {Author}. Die Abschnitte des Artikels sind unten zu finden.
+
+Ich möchte eine Übersicht aller Hörbuchvariantes für dieses Buch hinzufügen. Die Informationen zu den jeweilgen Varianten sind unten zu finden.
+
+Schreibe bitte für jede Hörbuchvariante eine kurze Zusammenfassung (1 bis 3 Sätze) und gehe dabei wenn möglich auf die Sprecher und die Besonderheiten dieser Variante ein.
+
+{language}
+
+audible_product_information: {products}
+article: {article}
+"""
+
+[meta_writer]
+generate = """
+Unten ist ein Artikel über das Buch "{title}" von {author}. Liefere bitte Meta-Daten für einen Artikel über das Buch.
+
+Bitte erstelle je einen mit Markdown formatierten Text für:
+
+meta_title: H1 Titel. 50 Zeichen. Muss dem Muster folgen: „%{title}“ von {author} - Zusammenfassung und Analyse'
+lead_in: Ein kurzer Absatz, der den Artikel einleitet und beschreibt. Muss dem Muster folgen: 'In unserer Zusammenfassung des Buches *{title}* von {author} erfährst du alles Wissenswerte zu dem Werk: Inhaltsangabe, Charaktere, Kapitel und Einordnung.'
+meta_description: SEO-optimierte Meta-Description. 125 Zeichen. Muss dem Muster folgen: 'Zusammenfassung des Buches „{title}“ von {author}: Handlung, Hauptfiguren und Analyse, sowie alle Hörbuchversionen auf Audible.'
+
+
+Artikel: {article}
+"""

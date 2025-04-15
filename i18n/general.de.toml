@@ -5,5 +5,15 @@ first_published = "Erschienen"
 temporal_setting = "Handlungszeitraum"
 themes = "Themen"
 genres = "Genres"
+duration = "Spieldauer"
+narrator = "Sprecher"
+narrators = "Sprecher"
+rating = "Bewertung"
+language = "Sprache"
+german = "Deutsch"
 
 interesting_facts = "Wissenswertes zu *{title}*"
+on_audible = "*{title}* auf Audible"
+
+
+review_stopwords = "Ein Fehler ist aufgetreten.;Sie haben diese Rezension bewertet.;Wir haben Ihre Meldung erhalten und werden die Rezension prüfen.;Leute fanden das hilfreich"

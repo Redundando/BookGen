@@ -27,6 +27,7 @@ class ArticleWriter(JSONCache):
         self._initialized = False
         self._topic_information = None
         self._full_article_draft = None
+        self._sections = []
 
         self.google_doc_final_article = Docorator(
                 service_account_file=self.book_generator.settings.service_account_file,
@@ -119,20 +120,31 @@ class ArticleWriter(JSONCache):
             result.append({"order": topic.order, "name": topic.name, "text": await topic.text_or_draft()})
         return result
 
-    async def _sections_with_key_and_interesting_facts(self):
-        result = await self._sections_from_topics()
-        result.append({"order": 0.5, "name": "", "text": await self.book_generator.fact_finder.key_facts_table()})
+    async def sections(self):
+        if self._sections is None:
+            self._sections = await self._sections_from_topics()
+        return self._sections
+
+    async def sort_sections(self):
+        self._sections = sorted(self._sections, key=lambda section: section["order"])
+        return self._sections
+
+    async def add_key_facts_section(self):
+        self._sections.append({"order": 0.5, "name": "", "text": await self.book_generator.fact_finder.key_facts_table()})
+
+    async def add_interesting_facts_section(self):
         interesting_facts_text = f"""## {i18n("general.interesting_facts", title=self.book_generator.settings.title)}\n\n{await self.book_generator.fact_finder.interesting_facts_list()}"""
-        result.append({"order": 1.5, "name": "", "text": interesting_facts_text})
-        result = sorted(result, key=lambda x: x["order"])
-        return result
+        self._sections.append({"order": 1.5, "name": "", "text": interesting_facts_text})
+
+    async def add_on_audible_section(self):
+        self._sections.append({"order": 1.6,"name": "","text": await self.book_generator.audible_finder.on_audible_section()})
 
     @Logger()
     async def save_full_article_to_google_doc(self):
         await self._initialize_topic_content_docs()
         await self.google_doc_final_article.initialize()
         markdown = ""
-        sections = await self._sections_with_key_and_interesting_facts()
+        sections = await self.sections()
         for section in sections:
             markdown += section["text"] + "\n\n"
         await self.google_doc_final_article.update_from_markdown(markdown_text=_sanitize_markdown(markdown))
@@ -143,4 +155,13 @@ class ArticleWriter(JSONCache):
         await self.save_topic_structure_to_google_doc()
         await self.write_all_drafts()
         await self.refine_all_drafts()
+
+        self._sections = await self._sections_from_topics()
+
+        await self.add_key_facts_section()
+        await self.add_on_audible_section()
+        await self.add_interesting_facts_section()
+
+        await self.sort_sections()
+
         await self.save_full_article_to_google_doc()
