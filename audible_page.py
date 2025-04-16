@@ -19,24 +19,31 @@ if TYPE_CHECKING:
 
 class AudiblePage(JSONCache):
 
-    def __init__(self, bg: "BookGenerator", url=""):
+    def __init__(self, bg: "None|BookGenerator", url="", clear_cache: bool = False, ttl: bool = 7):
         self.book_generator = bg
+        data_id = f"{slugify(url)}"
+        if self.book_generator:
+            data_id = f"{slugify(self.book_generator.settings.title)}_{slugify(url)}"
+            clear_cache = self.book_generator.clear_cache
+            ttl = self.book_generator.ttl
+        super().__init__(
+                data_id=data_id, directory="data/audible_pages", clear_cache=clear_cache, ttl=ttl)
         self._is_correct_page_for_book = None
         self.url = url
-        super().__init__(
-                data_id=f"{slugify(self.book_generator.settings.title)}_{slugify(url)}",
-                directory="data/audible_pages",
-                clear_cache=self.book_generator.clear_cache,
-                ttl=self.book_generator.ttl)
         self.scraper = GhostScraper(
-                url=url, clear_cache=self.book_generator.clear_cache, ttl=self.book_generator.ttl, load_timeout=15000, max_retries=4)
+                url=self.url_with_country_override(), clear_cache=clear_cache, ttl=ttl, load_timeout=15000, max_retries=4)
         self._soup: None | BeautifulSoup = None
 
     def __str__(self):
-        return f"Source {self.url} ({self.book_generator.settings.title})"
+        return f"Source {self.url}"
 
     def __repr__(self):
         return self.__str__()
+
+    def url_with_country_override(self):
+        params = "overrideBaseCountry=true&ipRedirectOverride=true"
+        result = re.sub(r'(\?.*)?$', lambda m: ('&' if m.group(1) else '?') + params, self.url)
+        return result
 
     async def _get_soup_from_scrape(self):
         html = await self.scraper.html()
@@ -53,7 +60,7 @@ class AudiblePage(JSONCache):
         if self._soup is None:
             self._soup = await self._get_soup_from_scrape()
         if self._is_correct_page_for_book is None:
-            self._is_correct_page_for_book = (await self.analyse()).get("is_correct_product")
+            self._is_correct_page_for_book = (await self.analyse()).get("is_correct_product", False)
 
     async def asin(self):
         return re.search(r'/([A-Z0-9]{10})(?:[/?]|$)', self.url).group(1)
@@ -130,12 +137,17 @@ class AudiblePage(JSONCache):
         (hours, minutes) = divmod(await self.duration(), 60)
         return f"""{"0" if hours < 10 else ""}{hours}:{"0" if minutes < 10 else ""}{minutes}"""
 
-
     async def language(self):
         json = await self.audiobook_ld_json()
         if json is None:
             return None
         return unescape(json.get("inLanguage"))
+
+    async def is_abridged(self):
+        json = await self.audiobook_ld_json()
+        if json is None:
+            return None
+        return unescape(json.get("abridged", "false")) == "true"
 
     async def num_ratings(self):
         json = await self.audiobook_ld_json()
@@ -163,7 +175,6 @@ class AudiblePage(JSONCache):
         if (await self.average_rating()) == 0:
             return "-"
         return f"{i18n_number(await self.average_rating(), decimals=1)} / 5"
-
 
     async def reviews(self):
         result = []
@@ -209,21 +220,30 @@ class AudiblePage(JSONCache):
             result.append(review)
         return result
 
+    async def image_url(self):
+        json = await self.audiobook_ld_json()
+        if json is None:
+            return None
+        return unescape(json.get("image", None))
+
     async def information(self):
         result = {
-                "asin"     : await self.asin(),
-                "title"    : await self.title(),
-                "authors"  : await self.authors(),
-                "narrators": await self.narrators(),
-                "summary"  : await self.summary(),
-                "duration" : await self.duration(),
-                "rating"   : await self.average_rating(),
-                "language" : await self.language(),
-                "reviews"  : await self.reviews()}
+                "asin"       : await self.asin(),
+                "title"      : await self.title(),
+                "is_abridged": await self.is_abridged(),
+                "authors"    : await self.authors(),
+                "narrators"  : await self.narrators(),
+                "summary"    : await self.summary(),
+                "duration"   : await self.duration(),
+                "rating"     : await self.average_rating(),
+                "language"   : await self.language(),
+                "reviews"    : await self.reviews()}
         return result
 
     @Logger()
     async def analyse(self):
+        if await self.language() not in self.book_generator.settings.audiobook_languages: return {"is_correct_product": False}
+
         with open(str(Path(__file__).parent / "i18n/audible_page.analyse.yaml"), "r") as f:
             json_schema = yaml.safe_load(f)
 
@@ -233,8 +253,7 @@ class AudiblePage(JSONCache):
                 author=self.book_generator.settings.author,
                 url=self.url,
                 information=await self.information(),
-                language=i18n("prompts.language"),
-        )
+                language=i18n("prompts.language"), )
 
         llm = AsyncLLM(
                 base=self.book_generator.settings.general_base,
@@ -258,14 +277,17 @@ class AudiblePage(JSONCache):
 
 
 async def main():
-    from book_generator import BookGenerator
-    ap = AudiblePage(BookGenerator(sheet_identifier="1T5iww2OoBP_oxwL6rAEa4TtKOo2D0s44JbV-mX91ZMM"), "https://www.audible.de/pd/B004UXEACC")
+    import book_generator
+    ap = AudiblePage(
+            book_generator.BookGenerator(sheet_identifier="1UYxtgU_cHtcLE_Eh7lAZOfvu3hJ-Yqj3fPxQgXeGrws"),
+            "https://www.audible.com/pd/1984-Audiobook/B09NMPS9HQ")
     await ap.run_analysis()
-    print(await ap.asin())
+    print(await ap.is_correct_page_for_book())
+    print(await ap.image_url())
 
 
 if __name__ == "__main__":
     import asyncio
 
-    TomlI18n.initialize(locale="de", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
+    TomlI18n.initialize(locale="en", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
     asyncio.run(main())

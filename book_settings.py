@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-
+import os
 from cacherator import Cached, JSONCache
 from slugify import slugify
 
@@ -10,12 +10,26 @@ if TYPE_CHECKING:
 
 
 class BookSettings(JSONCache):
-    DEFAULT_GENERAL_BASE = "anthropic"
-    DEFAULT_GENERAL_MODEL = "claude-3-7-sonnet-20250219"
+    DEFAULT_GENERAL_BASE = "openai"
+    DEFAULT_GENERAL_MODEL = "gpt-4o"
+    DEFAULT_GENERAL_API_KEY = os.environ.get("CHATGPT_API_KEY")
+    DEFAULT_COMPLEX_BASE = "openai"
+    DEFAULT_COMPLEX_MODEL = "gpt-4.5-preview"
+    DEFAULT_COMPLEX_API_KEY = os.environ.get("CHATGPT_API_KEY")
     DEFAULT_WRITING_BASE = "openai"
-    DEFAULT_WRITING_MODEL = "gpt-4.5-preview"
+    DEFAULT_WRITING_MODEL = "gpt-4o"
+    DEFAULT_WRITING_API_KEY = os.environ.get("CHATGPT_API_KEY")
     DEFAULT_SEARCH_BASE = "perplexity"
     DEFAULT_SEARCH_MODEL = "sonar-pro"
+    DEFAULT_SEARCH_API_KEY = os.environ.get("PERPLEXITY_API_KEY")
+
+    DEFAULT_MIN_SOURCE_LENGTH = 1500
+    DEFAULT_NUM_SEARCH_REFINEMENTS = 7
+    DEFAULT_URLS_PER_SEARCH = 14
+    DEFAULT_MIN_COVERAGE_RATING = 7
+    DEFAULT_MAX_SOURCES = 80
+    DEFAULT_AUDIOBOOK_LANGUAGES = "english"
+    DEFAULT_MAX_AUDIOBOOKS = 5
 
     def __init__(self, bg: "BookGenerator") -> None:
         self.book_generator = bg
@@ -56,7 +70,14 @@ class BookSettings(JSONCache):
 
     @property
     def proposed_word_count(self):
-        return int(self._settings.get("proposed_word_count", 2000))
+        try:
+            return int(self._settings.get("proposed_word_count", 0))
+        except:
+            return 0
+
+    @property
+    def word_count_is_set(self):
+        return self.proposed_word_count > 0
 
     @property
     def search_base(self):
@@ -68,7 +89,7 @@ class BookSettings(JSONCache):
 
     @property
     def search_api_key(self):
-        return self._settings.get("search_api_key", "")
+        return self._settings.get("search_api_key", self.DEFAULT_SEARCH_API_KEY)
 
     @property
     def email(self):
@@ -84,27 +105,19 @@ class BookSettings(JSONCache):
 
     @property
     def general_api_key(self):
-        result = self._settings.get("general_api_key", "")
-        if result == "":
-            import os
-            result = os.environ.get("ANTHROPIC_API_KEY")
-        return result
+        return self._settings.get("general_api_key", self.DEFAULT_GENERAL_API_KEY)
 
     @property
     def complex_base(self):
-        return self._settings.get("complex_base", self.DEFAULT_GENERAL_BASE)
+        return self._settings.get("complex_base", self.DEFAULT_COMPLEX_BASE)
 
     @property
     def complex_model(self):
-        return self._settings.get("complex_model", self.DEFAULT_GENERAL_MODEL)
+        return self._settings.get("complex_model", self.DEFAULT_COMPLEX_MODEL)
 
     @property
     def complex_api_key(self):
-        result = self._settings.get("complex_api_key", "")
-        if result == "":
-            import os
-            result = os.environ.get("ANTHROPIC_API_KEY")
-        return result
+        return self._settings.get("complex_api_key", self.DEFAULT_COMPLEX_API_KEY)
 
     @property
     def writing_base(self):
@@ -116,27 +129,50 @@ class BookSettings(JSONCache):
 
     @property
     def writing_api_key(self):
-        result = self._settings.get("general_api_key", "")
-        if result == "":
-            import os
-            result = os.environ.get("ANTHROPIC_API_KEY")
-        return result
+        return self._settings.get("writing_api_key", self.DEFAULT_WRITING_API_KEY)
 
     @property
     def min_source_length(self):
-        return int(self._settings.get("min_source_length", 2000))
+        return int(self._settings.get("min_source_length", self.DEFAULT_MIN_SOURCE_LENGTH))
 
     @property
     def urls_per_search(self):
-        return int(self._settings.get("urls_per_search", 7))
+        return int(self._settings.get("urls_per_search", self.DEFAULT_URLS_PER_SEARCH))
 
     @property
     def num_search_refinements(self):
-        return int(self._settings.get("num_search_refinements", 7))
+        return int(self._settings.get("num_search_refinements", self.DEFAULT_NUM_SEARCH_REFINEMENTS))
 
     @property
     def final_article_url(self):
         return self._settings.get("final_article", None)
+
+    @property
+    def min_coverage_rating(self):
+        try:
+            return int(self._settings.get("min_coverage_rating", self.DEFAULT_MIN_COVERAGE_RATING))
+        except ValueError:
+            return 7
+
+    @property
+    def max_sources(self):
+        try:
+            return int(self._settings.get("max_sources", self.DEFAULT_MAX_SOURCES))
+        except ValueError:
+            return 80
+
+    @property
+    def audiobook_languages(self):
+        languages_string = self._settings.get("audiobook_languages", self.DEFAULT_AUDIOBOOK_LANGUAGES)
+        languages = [l.strip() for l in languages_string.split(",")]
+        return languages
+
+    @property
+    def max_audiobooks(self):
+        try:
+            return int(self._settings.get("max_audiobooks", self.DEFAULT_MAX_AUDIOBOOKS))
+        except ValueError:
+            return self.DEFAULT_MAX_AUDIOBOOKS
 
     def set(self, key="", value=""):
         self._settings_tab.update_row_by_column_pattern(column="Key", value=key, updates={"Value": value})

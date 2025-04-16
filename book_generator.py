@@ -13,7 +13,7 @@ import source_finder
 import topic_finder
 import fact_finder
 import audible_finder
-
+import meta_writer
 
 def setup_toml18n():
     TomlI18n.initialize(locale="en", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
@@ -65,6 +65,12 @@ class BookGenerator(JSONCache):
 
     @property
     @Cached()
+    def meta_writer(self):
+        return meta_writer.MetaWriter(bg=self)
+
+
+    @property
+    @Cached()
     def article_writer(self):
         return article_writer.ArticleWriter(bg=self)
 
@@ -84,7 +90,7 @@ async def main():
     # darius = BookGenerator(sheet_identifier="1oFqIAaPjAdsbxmrhInJS7Cnp5OOFc9BByZl2dc-AuME", clear_cache=False)
     # madonna = BookGenerator(sheet_identifier="1g3Cf6N0-8Mh_O0Nd3Rufq3WrAC5mzQikZftnXLtqZAU", clear_cache=False)
     # tadzio = BookGenerator(sheet_identifier="1tW-Pbbq6pJ908LFtRaahvtiV2DX7bzLm1_heSDDK7U8", clear_cache=False)
-    #demian = BookGenerator(sheet_identifier="1T5iww2OoBP_oxwL6rAEa4TtKOo2D0s44JbV-mX91ZMM")
+    # demian = BookGenerator(sheet_identifier="1T5iww2OoBP_oxwL6rAEa4TtKOo2D0s44JbV-mX91ZMM")
     # cats = BookGenerator(sheet_identifier="1mciIdQdovAsyxFeuGnzxvjqpLOtOCymofuk-swGv11k", clear_cache=False)
     # minds = BookGenerator(sheet_identifier="18FUR96CoCmKafrgoiZ0qzPSGeQv4nsHnOANil_-qfXk", clear_cache=True)
     # mom = BookGenerator(sheet_identifier="1Luzg3NKFbnlfLmnvxitbMakumxL7d-cLJ5q2JLsvJBk", clear_cache=True)
@@ -98,8 +104,11 @@ async def main():
     # welt = BookGenerator(sheet_identifier="1RUQniXmt6TBE-It5SktaDGedFZXkStBpA4Bs8WopNRM", clear_cache=False)
     # pinky = BookGenerator(sheet_identifier="1Yxj636li7BBBZf0kkepLU6lF9D_0gNQM-ZMaBDrvhuQ", clear_cache=False)
     # orwell = BookGenerator(sheet_identifier="1sD6aVxlUpytrdcnugPb40eR4ObY4tCAjWH3kavkkO5Q")
-    anders = BookGenerator(sheet_identifier="1LxrgsfsA5-pRKGwRPFxahgL3yAzLG_NVUtYvTrKo4LI")
-    await anders.run()
+    # anders = BookGenerator(sheet_identifier="1LxrgsfsA5-pRKGwRPFxahgL3yAzLG_NVUtYvTrKo4LI")
+    # zeh = BookGenerator(sheet_identifier="1qGsRGOp6kM2OoQvyIse_InmKHPfE2NK1wjHuluo7K_A")
+    # nef = BookGenerator(sheet_identifier="1UYxtgU_cHtcLE_Eh7lAZOfvu3hJ-Yqj3fPxQgXeGrws")
+    bilbo = BookGenerator(sheet_identifier="1KUhA6z-D5SToWX-AK02sVhoNDBjRiLigrlFKLazMT3E")
+    await bilbo.run()
 
 
 

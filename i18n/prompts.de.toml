@@ -45,27 +45,32 @@ synthesize_sources = """
 Ich möchte einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben.
 
 Ich habe alle verfügbaren Informationen über das Buch gesammelt, indem ich mehrere Webseiten analysiert habe. Die Informationen findest du unten.
-Basierend auf den bereitgestellten Informationen, schlage bitte vor, welche Themen der Artikel abdecken sollte.
+Basierend auf den bereitgestellten Informationen, schlage bitte vor, welche Sektionen der Artikel enthalten sollte.
 
-- Das 1. Thema sollte ein kurzer "Über das Buch" Absatz ohne Spoiler sein
-- Das 2. Thema sollte eine Zusammenfassung der Handlung (mit Spoilern) sein
-- Folgend kommen alle Themen, die du basierend auf den Quellen für relevant hältst
-- Diese Themen können am Ende erscheinen:
-    - Kritische Rezeption (falls verfügbar)
-    - Adaptionen (falls verfügbar)
-- Das letzte Thema muss Über den Autor / die Autorin sein
+- Die 1. Sektion sollte ein kurzer "Über das Buch" Absatz ohne Spoiler sein
+- Die 2. Sektion sollte eine Zusammenfassung der Handlung (mit Spoilern) sein
+- Folgend kommen Sektionen zu allen Themen, die du basierend auf den Quellen für relevant hältst
+- Wenn passend, inkludiere eine Sektion, welche die Charaktere des Buches beschreibt
+- Diese Sektion kann (falls passend) am Ende erscheinen:
+    - Film-Adaptionen (falls verfügbar)
+- Die letzte Sektion muss Über den Autor / die Autorin sein
 
-- Die Gesamtlänge aller Themen sollte etwa {num_words} Wörter betragen
-- Es sollte KEIN Thema geben, das Leserbewertungen abdeckt
+{num_words_condition}
 
-Für jedes Thema gib bitte an:
-- order: Ganzzahlwert, der die Reihenfolge der Themen angibt
-- topic_name: Richtiger Name / Überschrift für dieses Thema
-- topic_notes: Kurze Skizze dessen, was in diesem Thema behandelt werden soll (Schreibe dies als Prompt, welcher den Abschnitt basierend auf den Quellen generiert)
-- sources: welche der angegebenen URLs wären geeignet, um Informationen zu diesem Thema zu sammeln (verwende 4 oder mehr Quellen-URLs)
+- Es darf KEINE Sektion geben, die Kritiken oder Leserbewertungen abdeckt
+
+Für jede Sektion gib bitte an:
+- order: Ganzzahlwert, der die Reihenfolge der Sektionen angibt
+- topic_name: Richtiger Name / Überschrift für diese Sektion
+- topic_notes: Kurze Skizze dessen, was in diese Sektion behandelt werden soll (Schreibe dies als Prompt, welcher den Abschnitt basierend auf den Quellen generiert)
+- sources: welche der angegebenen URLs wären geeignet, um Informationen zu dieser Sektion zu sammeln (verwende 4 oder mehr Quellen-URLs)
 - word_count: Wie viele Wörter du vorschlägst, über dieses spezifische Thema zu schreiben
 
 Quelleninhalte: {sources}
+"""
+
+num_words_condition = """
+- Die Gesamtlänge aller Sektionen sollte rund {num_words} Wörter betragen.
 """
 
 [fact_finder]
@@ -92,7 +97,7 @@ Ich möchte einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" v
 Gib mir dazu bitte folgende Fakten:
 - Datum der Ersterscheinung
 - Genres
-- Handlungszeitraum
+- Zeit der Handlung (zum Beispiel "frühes 19. Jahrhundert" oder "mehrere tausend Jahre in der Zukunft")
 - Zentrale Themen des Buches
 
 """
@@ -115,7 +120,7 @@ Gesammelte Fakten: {facts}
 write_draft = """
 Ich möchte einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben. Unten findest du meine Artikelstruktur.
 
-Könntest du bitte den Abschnitt zum Thema "{topic}" schreiben.
+Könntest du bitte die Sektion zum Thema "{topic}" schreiben.
 
 Themendetails: {details}
 
@@ -125,12 +130,13 @@ Unten findest du mehrere Quellen für dieses Thema. Bitte verwende nur Informati
 - Bitte schreibe ungefähr {word_count} Wörter
 - Konzentriere dich NUR auf das Thema "{topic}" (die anderen Themen werden separat behandelt)
 - Wenn möglich und zutreffend, füge direkte Zitate oder spezifische Szenen ein, um die Analyse zu unterstützen
-- Wenn es sich bei dem Thema um einen Analyseabschnitt handelt: Verlasse dich eher auf Zeigen als auf Erzählen - verwende Beispiele, um Behauptungen zu belegen
+- Wenn es sich bei der Sektion um einen Analyseabschnitt handelt: Verlasse dich eher auf Zeigen als auf Erzählen - verwende Beispiele, um Behauptungen zu belegen
+- Wenn es sich bei der Sektion um Rezeption handelt: Nutze NUR namhafte Kritikier. Nenne (wenn vorhanden) die Namen der Kritiker (etwa 'die New Times schreibt, dass...'); verwende NIEMALS vage Attributionen wie 'einige Kritiker'.
+- Ziehe niemals ein Fazit oder Zusammenfassung.
+
 - Antworte nur mit Markdown
 - Die Hauptüberschrift für diesen Abschnitt sollte als h2 ("##") formatiert sein
-- Stelle sicher, dass der Text ordnungsgemäß mit Markdown formatiert ist (verwende gegebenenfalls Unterüberschriften (### xyz oder #### xyz), Listen oder Tabellen)
-- Erwähne keine Quellen.
-- Ziehe niemals ein Fazit oder Zusammenfassung.
+- Stelle sicher, dass der Text ordnungsgemäß mit Markdown formatiert ist (verwende gegebenenfalls Unterüberschriften (### xyz oder #### xyz) oder Listen)
 
 article_structure: {article_structure}
 source_information: {source_information}
@@ -138,7 +144,7 @@ source_information: {source_information}
 refine_text = """
 Ich schreibe einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author}. Unten findest du meinen Artikelentwurf.
 
-Bitte überarbeite Abschnitt {section_number} ("{topic}").
+Bitte überarbeite den unten aufgeführten Abschnitt {section_number} ("{topic}").
 
 - Stelle sicher, dass der Abschnitt zum Fluss des restlichen Artikels passt
 - Verwende niemals vage Quellenangaben (z.B. 'einige Kritiker erwähnen')
@@ -150,7 +156,9 @@ Bitte überarbeite Abschnitt {section_number} ("{topic}").
 
 - Wenn das Thema die Rezeption behandelt: biete spezifische Inhalte darüber, was Kritiker loben oder kritisieren.
 
-article_draft: {article}
+
+section_to_be_refined: {section}
+full_article_draft: {article}
 """
 
 refine_language = """
@@ -169,7 +177,7 @@ language = """
  - Antworte auf Deutsch!
  - Vermeide unnötige Adjektive und Übertreibungen.
  - Sprich den Leser niemals direkt an!
- - Verwende niemals Passivsprache, stets aktive sprache.
+ - Verwende niemals Passivsprache, stets aktive Sprache.
 
  - Formatierung: Falls du Namen von Büchern, Filmen und Fernsehsendungen im Text erwähnst, formatiere sie kursiv: _xxx_
  - Formatierung: Bei Anführungszeichen verwende immer deutsche (geschwungene) Anführungszeichen: \"„\" und \"“\"
@@ -190,6 +198,7 @@ Ich schreibe einen ausführlichen Artikel über das Buch "{title}" von {Author}.
 Ich möchte eine Übersicht aller Hörbuchvariantes für dieses Buch hinzufügen. Die Informationen zu den jeweilgen Varianten sind unten zu finden.
 
 Schreibe bitte für jede Hörbuchvariante eine kurze Zusammenfassung (1 bis 3 Sätze) und gehe dabei wenn möglich auf die Sprecher und die Besonderheiten dieser Variante ein.
+Es ist nicht nötig, die Handlung zusammenzufassen. Dies wird bereits im Artikel getan.
 
 {language}
 

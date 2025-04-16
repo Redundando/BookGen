@@ -139,6 +139,9 @@ class ArticleWriter(JSONCache):
     async def add_on_audible_section(self):
         self._sections.append({"order": 1.6,"name": "","text": await self.book_generator.audible_finder.on_audible_section()})
 
+    async def add_meta_section(self):
+        self._sections.append({"order": 0.1, "name":"", "text": await self.book_generator.meta_writer.meta_sections()})
+
     @Logger()
     async def save_full_article_to_google_doc(self):
         await self._initialize_topic_content_docs()
@@ -161,7 +164,10 @@ class ArticleWriter(JSONCache):
         await self.add_key_facts_section()
         await self.add_on_audible_section()
         await self.add_interesting_facts_section()
+        await self.add_meta_section()
 
         await self.sort_sections()
+
+
 
         await self.save_full_article_to_google_doc()

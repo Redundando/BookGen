@@ -156,6 +156,7 @@ class Topic(JSONCache):
                 author=self.book_generator.settings.author,
                 section_number=self.order,
                 article=article,
+                section=self._draft,
                 topic=self.name)
         llm = AsyncLLM(
                 base=self.book_generator.settings.writing_base,

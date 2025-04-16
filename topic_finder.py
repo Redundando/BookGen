@@ -25,7 +25,6 @@ class TopicFinder(JSONCache):
         self._source_summary = []
         self._topics: list[Topic] = []
 
-
     def __str__(self):
         return f"TopicFinder ({self.book_generator.settings.title})"
 
@@ -45,7 +44,7 @@ class TopicFinder(JSONCache):
     def _load_source_summary_from_sheet(self):
         self._source_summary = self.source_info_tab.data
 
-    def filtered_source_information(self, min_coverage_rating: int = 7, max_sources = 80):
+    def filtered_source_information(self, min_coverage_rating: int = 7, max_sources=80):
         result = []
         for s in self._source_summary:
             if s.get("coverage_rating", 0) >= min_coverage_rating:
@@ -57,12 +56,18 @@ class TopicFinder(JSONCache):
     async def synthesize_sources(self):
         with open(str(Path(__file__).parent / "i18n/topic_finder.synthesize_sources.yaml"), "r") as f:
             json_schema = yaml.safe_load(f)
+        num_words_condition = ""
+        if self.book_generator.settings.word_count_is_set:
+            num_words_condition = i18n("topic_finder.num_words_condition", num_words=self.book_generator.settings.proposed_word_count)
+
         prompt = i18n(
                 "topic_finder.synthesize_sources",
                 title=self.book_generator.settings.title,
                 author=self.book_generator.settings.author,
-                num_words=self.book_generator.settings.proposed_word_count,
-                sources=self.filtered_source_information(min_coverage_rating=7))
+                num_words_condition=num_words_condition,
+                sources=self.filtered_source_information(
+                    min_coverage_rating=self.book_generator.settings.min_coverage_rating,
+                    max_sources=self.book_generator.settings.max_sources))
         llm = AsyncLLM(
                 base=self.book_generator.settings.complex_base,
                 model=self.book_generator.settings.complex_model,
@@ -74,7 +79,7 @@ class TopicFinder(JSONCache):
                 json_mode=True,
                 json_schema=json_schema)
         await llm.execute()
-
+        llm.json_cache_save()
         result = llm.response.get("topics", [])
         return result
 

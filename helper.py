@@ -1,5 +1,8 @@
 import re
 
+def clean_string(s):
+    return re.sub(r'[^a-zA-Z0-9 ]+', '', s)
+
 
 def to_snake_case(s):
     # Replace spaces and hyphens with underscores

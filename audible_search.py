@@ -14,7 +14,6 @@ from logorator import Logger
 from slugify import slugify
 from smartllm import AsyncLLM
 from toml_i18n import i18n, TomlI18n
-from book_generator import BookGenerator
 
 if TYPE_CHECKING:
     from book_generator import BookGenerator
@@ -26,14 +25,14 @@ class AudibleSearch(JSONCache):
         self.book_generator = bg
         self.search_term = f"{self.book_generator.settings.title} {self.book_generator.settings.author}"
         self.search_parameter = slugify(self.search_term).replace("-", "+")
-        url = f"""{i18n("url.audible")}/search?keywords={self.search_parameter}&k={self.search_parameter}&pageSize=50"""
+        self.url = f"""{i18n("url.audible")}/search?keywords={self.search_parameter}&k={self.search_parameter}&pageSize=50&overrideBaseCountry=true&ipRedirectOverride=true"""
         super().__init__(
-                data_id=f"{slugify(self.book_generator.settings.title)}_{slugify(self.book_generator.settings.author)}",
+                data_id=f"{slugify(self.book_generator.settings.language)}_{slugify(self.book_generator.settings.title)}_{slugify(self.book_generator.settings.author)}",
                 directory="data/audible_search",
                 clear_cache=self.book_generator.clear_cache,
                 ttl=self.book_generator.ttl)
         self.scraper = GhostScraper(
-                url=url, clear_cache=self.book_generator.clear_cache, ttl=self.book_generator.ttl, load_timeout=15000, max_retries=5)
+                url=self.url, clear_cache=self.book_generator.clear_cache, ttl=self.book_generator.ttl, load_timeout=15000, max_retries=5)
         self._soup: None | BeautifulSoup = None
 
     def __str__(self):
@@ -65,12 +64,14 @@ class AudibleSearch(JSONCache):
         return proper_links
 
 async def main():
-    aus = AudibleSearch(BookGenerator(sheet_identifier="1tW-Pbbq6pJ908LFtRaahvtiV2DX7bzLm1_heSDDK7U8", clear_cache=False))
+    import book_generator
+    aus = AudibleSearch(book_generator.BookGenerator(sheet_identifier="1UYxtgU_cHtcLE_Eh7lAZOfvu3hJ-Yqj3fPxQgXeGrws", clear_cache=False))
     print(await aus.product_links())
+    #print(await aus.soup())
 
 
 if __name__ == "__main__":
     import asyncio
 
-    TomlI18n.initialize(locale="de", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
+    TomlI18n.initialize(locale="en", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
     asyncio.run(main())

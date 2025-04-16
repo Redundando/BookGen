@@ -1,0 +1,23 @@
+[general]
+title = "Title"
+author = "Author"
+first_published = "First Published"
+temporal_setting = "Time Period"
+themes = "Themes"
+genres = "Genres"
+duration = "Duration"
+narrator = "Narrator"
+narrators = "Narrators"
+rating = "Rating"
+language = "Language"
+abridged_version = "abridged version"
+german = "German"
+english = "English"
+
+interesting_facts = "Interesting facts about *{title}*"
+on_audible = "*{title}* on Audible"
+
+review_stopwords = "You reported this review;You voted on this review;Please try again in a few minutes;people found this helpful;person found this helpful"
+
+meta_description = "Meta Description"
+lead_in = "Lead In"
