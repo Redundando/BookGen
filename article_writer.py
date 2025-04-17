@@ -23,16 +23,19 @@ class ArticleWriter(JSONCache):
         self.book_generator = bg
         self.sheet = self.book_generator.sheet
         data_id = f"{slugify(self.sheet.sheet_identifier)}"
-        super().__init__(data_id=data_id, directory="data/article_writer", ttl=self.book_generator.ttl, clear_cache=self.book_generator.clear_cache)
+        super().__init__(data_id=data_id,
+                         directory="data/article_writer",
+                         ttl=self.book_generator.ttl,
+                         clear_cache=self.book_generator.clear_cache)
         self._initialized = False
         self._topic_information = None
         self._full_article_draft = None
         self._sections = []
 
         self.google_doc_final_article = Docorator(
-                service_account_file=self.book_generator.settings.service_account_file,
-                document_name=f"Article {slugify(self.book_generator.settings.author)} {slugify(self.book_generator.settings.title)}",
-                clear_cache=self.book_generator.clear_cache)
+            service_account_file=self.book_generator.settings.service_account_file,
+            document_name=f"Article {slugify(self.book_generator.settings.author)} {slugify(self.book_generator.settings.title)}",
+            clear_cache=self.book_generator.clear_cache)
 
     @property
     def topics_tab(self):
@@ -57,11 +60,11 @@ class ArticleWriter(JSONCache):
         result = []
         for topic in self.topics:
             row = {
-                    "order"           : topic.order,
-                    "topic_name"      : topic.name,
-                    "topic_notes"     : topic.details,
-                    "suggested_length": topic.suggested_length,
-                    "sources"         : topic.source_urls}
+                "order"           : topic.order,
+                "topic_name"      : topic.name,
+                "topic_notes"     : topic.details,
+                "suggested_length": topic.suggested_length,
+                "sources"         : topic.source_urls}
             result.append(row)
         return result
 
@@ -78,7 +81,8 @@ class ArticleWriter(JSONCache):
     async def save_topic_structure_to_google_doc(self):
         tab = self.topics_tab
         tab.data = [
-                ["order", "topic_name", "topic_notes", "word_count", "sources", "draft_url", "draft_word_count", "refined_url", "refined_word_count"]]
+            ["order", "topic_name", "topic_notes", "word_count", "sources", "draft_url", "draft_word_count",
+             "refined_url", "refined_word_count"]]
         for topic in self.topics:
             row = [topic.order, topic.name, topic.details, topic.suggested_length]
             urls = ", ".join([s.url for s in topic.sources])
@@ -130,17 +134,23 @@ class ArticleWriter(JSONCache):
         return self._sections
 
     async def add_key_facts_section(self):
-        self._sections.append({"order": 0.5, "name": "", "text": await self.book_generator.fact_finder.key_facts_table()})
+        self._sections.append({
+                                  "order": 0.5,
+                                  "name" : "",
+                                  "text" : await self.book_generator.fact_finder.key_facts_table()})
 
     async def add_interesting_facts_section(self):
         interesting_facts_text = f"""## {i18n("general.interesting_facts", title=self.book_generator.settings.title)}\n\n{await self.book_generator.fact_finder.interesting_facts_list()}"""
         self._sections.append({"order": 1.5, "name": "", "text": interesting_facts_text})
 
     async def add_on_audible_section(self):
-        self._sections.append({"order": 1.6,"name": "","text": await self.book_generator.audible_finder.on_audible_section()})
+        self._sections.append({
+                                  "order": 1.6,
+                                  "name" : "",
+                                  "text" : await self.book_generator.audible_finder.on_audible_section()})
 
     async def add_meta_section(self):
-        self._sections.append({"order": 0.1, "name":"", "text": await self.book_generator.meta_writer.meta_sections()})
+        self._sections.append({"order": 0.1, "name": "", "text": await self.book_generator.meta_writer.meta_sections()})
 
     @Logger()
     async def save_full_article_to_google_doc(self):
@@ -167,7 +177,5 @@ class ArticleWriter(JSONCache):
         await self.add_meta_section()
 
         await self.sort_sections()
-
-
 
         await self.save_full_article_to_google_doc()

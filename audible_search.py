@@ -9,7 +9,6 @@ import yaml
 from bs4 import BeautifulSoup
 from cacherator import JSONCache
 from ghostscraper import GhostScraper
-from googlesearch import search
 from logorator import Logger
 from slugify import slugify
 from smartllm import AsyncLLM

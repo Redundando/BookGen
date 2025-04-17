@@ -12,24 +12,31 @@ if TYPE_CHECKING:
 class BookSettings(JSONCache):
     DEFAULT_GENERAL_BASE = "openai"
     DEFAULT_GENERAL_MODEL = "gpt-4o"
-    DEFAULT_GENERAL_API_KEY = os.environ.get("CHATGPT_API_KEY")
+    DEFAULT_GENERAL_API_KEY = os.environ.get("CHATGPT_API_KEY", _config.CHATGPT_API_KEY)
     DEFAULT_COMPLEX_BASE = "openai"
     DEFAULT_COMPLEX_MODEL = "gpt-4.5-preview"
-    DEFAULT_COMPLEX_API_KEY = os.environ.get("CHATGPT_API_KEY")
+    DEFAULT_COMPLEX_API_KEY = os.environ.get("CHATGPT_API_KEY", _config.CHATGPT_API_KEY)
     DEFAULT_WRITING_BASE = "openai"
     DEFAULT_WRITING_MODEL = "gpt-4o"
-    DEFAULT_WRITING_API_KEY = os.environ.get("CHATGPT_API_KEY")
+    DEFAULT_WRITING_API_KEY = os.environ.get("CHATGPT_API_KEY", _config.CHATGPT_API_KEY)
     DEFAULT_SEARCH_BASE = "perplexity"
     DEFAULT_SEARCH_MODEL = "sonar-pro"
-    DEFAULT_SEARCH_API_KEY = os.environ.get("PERPLEXITY_API_KEY")
+    DEFAULT_SEARCH_API_KEY = os.environ.get("PERPLEXITY_API_KEY", _config.PERPLEXITY_API_KEY)
+
+    DEFAULT_BRAVE_API_KEY = os.environ.get("BRAVE_API_KEY", _config.BRAVE_API_KEY)
 
     DEFAULT_MIN_SOURCE_LENGTH = 1500
     DEFAULT_NUM_SEARCH_REFINEMENTS = 7
     DEFAULT_URLS_PER_SEARCH = 14
     DEFAULT_MIN_COVERAGE_RATING = 7
     DEFAULT_MAX_SOURCES = 80
-    DEFAULT_AUDIOBOOK_LANGUAGES = "english"
+    DEFAULT_AUDIOBOOK_LANGUAGES = "english, german, french, italian, spanish"
     DEFAULT_MAX_AUDIOBOOKS = 5
+
+    DEFAULT_SOURCE_SCRAPE_TIMEOUT = 30000
+    DEFAULT_SOURCE_SCRAPE_RETRIES = 2
+    DEFAULT_AUDIBLE_SCRAPE_TIMEOUT = 30000
+    DEFAULT_AUDIBLE_SCRAPE_RETRIES = 4
 
     def __init__(self, bg: "BookGenerator") -> None:
         self.book_generator = bg
@@ -130,6 +137,26 @@ class BookSettings(JSONCache):
     @property
     def writing_api_key(self):
         return self._settings.get("writing_api_key", self.DEFAULT_WRITING_API_KEY)
+
+    @property
+    def brave_api_key(self):
+        return self._settings.get("brave_api_key", self.DEFAULT_BRAVE_API_KEY)
+
+    @property
+    def source_scrape_timeout(self):
+        return self._settings.get("source_scrape_timeout", self.DEFAULT_SOURCE_SCRAPE_TIMEOUT)
+
+    @property
+    def source_scrape_retries(self):
+        return self._settings.get("source_scrape_retries", self.DEFAULT_SOURCE_SCRAPE_RETRIES)
+
+    @property
+    def audible_scrape_timeout(self):
+        return self._settings.get("audible_scrape_timeout", self.DEFAULT_AUDIBLE_SCRAPE_TIMEOUT)
+
+    @property
+    def audible_scrape_retries(self):
+        return self._settings.get("audible_scrape_retries", self.DEFAULT_AUDIBLE_SCRAPE_RETRIES)
 
     @property
     def min_source_length(self):

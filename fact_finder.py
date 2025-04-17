@@ -23,7 +23,10 @@ class FactFinder(JSONCache):
         self.sheet_identifier = self.book_generator.sheet_identifier
         data_id = f"{slugify(self.sheet_identifier)}"
         self._content = ""
-        super().__init__(data_id=data_id, directory="data/fact_finder", ttl=self.book_generator.ttl, clear_cache=self.book_generator.clear_cache)
+        super().__init__(data_id=data_id,
+                         directory="data/fact_finder",
+                         ttl=self.book_generator.ttl,
+                         clear_cache=self.book_generator.clear_cache)
 
     @property
     def sources(self):
@@ -39,20 +42,20 @@ class FactFinder(JSONCache):
         with open(str(Path(__file__).parent / "i18n/fact_finder.synthesize_interesting_facts.yaml"), "r") as f:
             json_schema = yaml.safe_load(f)
         prompt = i18n(
-                "fact_finder.synthesize_facts",
-                title=self.book_generator.settings.title,
-                author=self.book_generator.settings.author,
-                facts=await self._all_interesting_facts())
+            "fact_finder.synthesize_facts",
+            title=self.book_generator.settings.title,
+            author=self.book_generator.settings.author,
+            facts=await self._all_interesting_facts())
         llm = AsyncLLM(
-                base=self.book_generator.settings.complex_base,
-                model=self.book_generator.settings.complex_model,
-                api_key=self.book_generator.settings.complex_api_key,
-                prompt=prompt,
-                temperature=0.2,
-                max_input_tokens=200_000,
-                max_output_tokens=50_000,
-                json_mode=True,
-                json_schema=json_schema)
+            base=self.book_generator.settings.complex_base,
+            model=self.book_generator.settings.complex_model,
+            api_key=self.book_generator.settings.complex_api_key,
+            prompt=prompt,
+            temperature=0.2,
+            max_input_tokens=200_000,
+            max_output_tokens=50_000,
+            json_mode=True,
+            json_schema=json_schema)
         await llm.execute()
 
         result = llm.response.get("interesting_facts", [])
@@ -61,8 +64,13 @@ class FactFinder(JSONCache):
     @Logger()
     async def _get_key_facts(self):
         prompt = i18n(
-                "fact_finder.get_key_facts", title=self.book_generator.settings.title, author=self.book_generator.settings.author)
-        llm = SmartLLM(base="perplexity", model="sonar-pro", api_key=os.environ.get("PERPLEXITY_API_KEY"), prompt=prompt)
+            "fact_finder.get_key_facts",
+            title=self.book_generator.settings.title,
+            author=self.book_generator.settings.author)
+        llm = SmartLLM(base="perplexity",
+                       model="sonar-pro",
+                       api_key=os.environ.get("PERPLEXITY_API_KEY"),
+                       prompt=prompt)
         llm.execute()
         return llm.response
 
@@ -73,21 +81,21 @@ class FactFinder(JSONCache):
             print(json_schema)
 
         prompt = i18n(
-                "fact_finder.organize_key_facts",
-                title=self.book_generator.settings.title,
-                author=self.book_generator.settings.author,
-                facts=await self._get_key_facts())
+            "fact_finder.organize_key_facts",
+            title=self.book_generator.settings.title,
+            author=self.book_generator.settings.author,
+            facts=await self._get_key_facts())
 
         llm = AsyncLLM(
-                base=self.book_generator.settings.general_base,
-                model=self.book_generator.settings.general_model,
-                api_key=self.book_generator.settings.general_api_key,
-                prompt=prompt,
-                temperature=0.2,
-                max_input_tokens=200_000,
-                max_output_tokens=50_000,
-                json_mode=True,
-                json_schema=json_schema)
+            base=self.book_generator.settings.general_base,
+            model=self.book_generator.settings.general_model,
+            api_key=self.book_generator.settings.general_api_key,
+            prompt=prompt,
+            temperature=0.2,
+            max_input_tokens=200_000,
+            max_output_tokens=50_000,
+            json_mode=True,
+            json_schema=json_schema)
         await llm.execute()
 
         result = llm.response
@@ -102,20 +110,20 @@ class FactFinder(JSONCache):
 
     async def key_facts_table(self):
         facts = await self.key_facts()
-        result=""
+        result = ""
         result += f"""- **{i18n("general.title")}**: {facts.get("title", "")}\n"""
         result += f"""- **{i18n("general.author")}**: {facts.get("author", "")}\n"""
         if "first_published" in facts: result += f"""- **{i18n("general.first_published")}**: {facts.get("first_published", "")}\n"""
-        if "genres" in facts: result += f"""- **{i18n("general.genres")}**: {", ".join(facts.get("genres", []))}\n"""
+        genres = [str(genre) for genre in facts.get("genres", [])]
+        if "genres" in facts: result += f"""- **{i18n("general.genres")}**: {", ".join(genres)}\n"""
         if "temporal_setting" in facts: result += f"""- **{i18n("general.temporal_setting")}**: {facts.get("temporal_setting", "")}\n"""
-        if "main_themes" in facts: result += f"""- **{i18n("general.themes")}**: {", ".join(facts.get("main_themes", []))}\n"""
+        main_themes = [str(theme).title() for theme in facts.get("main_themes", [])]
+        if "main_themes" in facts: result += f"""- **{i18n("general.themes")}**: {", ".join(main_themes)}\n"""
         return result
-
-
 
     async def interesting_facts_list(self):
         result = ""
         facts = await self._synthesize_interesting_facts()
         for fact in facts:
-            result+=f"- {fact}\n"
+            result += f"- {fact}\n"
         return result
