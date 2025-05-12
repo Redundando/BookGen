@@ -6,8 +6,9 @@ from slugify import slugify
 from smart_spread import SmartSpread
 from toml_i18n import TomlI18n
 from book_worker import BookWorker
-
+import traceback
 import _config as config
+
 
 class AsinListWorker(JSONCache):
 
@@ -15,7 +16,6 @@ class AsinListWorker(JSONCache):
         self.sheet_identifier = sheet_identifier
         self.service_account_key = config.SERVICE_ACCOUNT_KEY
         super().__init__(data_id=f"{self.sheet_identifier}", directory="data/asin_list_worker")
-
 
     @property
     @Cached()
@@ -51,14 +51,18 @@ class AsinListWorker(JSONCache):
             try:
                 await self.run_row(row)
             except Exception as e:
-                row["Exception"] = str(e)
+                error = f"{str(e)} \n\n {traceback.format_exc()}"
+
+                row["Exception"] = error
+                row["Done"] = -1
                 self.data_tab.update_row_by_column_pattern(column="ASIN", value=row.get("ASIN"), updates=row)
                 self.data_tab.write_data()
 
 
 async def main():
-    alw = AsinListWorker(sheet_identifier="1m41zxMXB9KZSNkkZq01hXqudmqrlwttgneh-uy-d4yU")
-    await alw.run()
+    en = AsinListWorker(sheet_identifier="1m41zxMXB9KZSNkkZq01hXqudmqrlwttgneh-uy-d4yU")
+    de = AsinListWorker(sheet_identifier="1zoeh2JvUvak45yvXz_jqGafKHCAlosMCphFiYpJUqYQ")
+    await de.run()
     #tab = alw.sheet.tab(tab_name="ASINs", data_format="dict")
     #print(alw.open_asins())
 

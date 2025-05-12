@@ -22,16 +22,24 @@ class AudiblePage(JSONCache):
     def __init__(self, bg: "None|BookGenerator", url="", clear_cache: bool = False, ttl: bool = 7):
         self.book_generator = bg
         data_id = f"{slugify(url)}"
+        load_timeout = 30000
+        max_retries = 4
         if self.book_generator:
             data_id = f"{slugify(self.book_generator.settings.title)}_{slugify(url)}"
             clear_cache = self.book_generator.clear_cache
             ttl = self.book_generator.ttl
+            load_timeout = self.book_generator.settings.audible_scrape_timeout
+            max_retries = self.book_generator.settings.audible_scrape_retries
         super().__init__(
-                data_id=data_id, directory="data/audible_pages", clear_cache=clear_cache, ttl=ttl)
+            data_id=data_id, directory="data/audible_pages", clear_cache=clear_cache, ttl=ttl)
         self._is_correct_page_for_book = None
         self.url = url
         self.scraper = GhostScraper(
-                url=self.url_with_country_override(), clear_cache=clear_cache, ttl=ttl, load_timeout=15000, max_retries=4)
+            url=self.url_with_country_override(),
+            clear_cache=clear_cache,
+            ttl=ttl,
+            load_timeout=load_timeout,
+            max_retries=max_retries)
         self._soup: None | BeautifulSoup = None
 
     def __str__(self):
@@ -68,9 +76,11 @@ class AudiblePage(JSONCache):
     async def ld_json(self):
         soup = await self.soup()
         result = [json.loads(d.string, strict=False) for d in
-                soup.find_all(lambda tag: tag.name == 'script' and tag.get('type') in ['application/json', 'application/ld+json'])]
-        flatten_list = lambda irregular_list: [element for item in irregular_list for element in flatten_list(item)] if type(
-                irregular_list) is list else [irregular_list]
+                  soup.find_all(lambda tag: tag.name == 'script' and tag.get('type') in ['application/json',
+                                                                                         'application/ld+json'])]
+        flatten_list = lambda irregular_list: [element for item in irregular_list for element in
+                                               flatten_list(item)] if type(
+            irregular_list) is list else [irregular_list]
         return flatten_list(result)
 
     async def ld_json_type(self, type_=""):
@@ -207,9 +217,9 @@ class AudiblePage(JSONCache):
             review["text"] = f"""<p>\"<span>{heading}</span> {text}\"</p>"""
             try:
                 review["likes"] = int(
-                        card.select('p[class~="bc-size-footnote"]')[-1].text.replace("\n", "").strip().replace(
-                                ",", "").replace(
-                                " people found this helpful", "").replace(" person found this helpful", ""))
+                    card.select('p[class~="bc-size-footnote"]')[-1].text.replace("\n", "").strip().replace(
+                        ",", "").replace(
+                        " people found this helpful", "").replace(" person found this helpful", ""))
             except:
                 review["likes"] = 0
             review["rating"] = int(card.select("span[class~='bc-pub-offscreen']")[0].text.replace("out of 5 stars", ""))
@@ -228,43 +238,44 @@ class AudiblePage(JSONCache):
 
     async def information(self):
         result = {
-                "asin"       : await self.asin(),
-                "title"      : await self.title(),
-                "is_abridged": await self.is_abridged(),
-                "authors"    : await self.authors(),
-                "narrators"  : await self.narrators(),
-                "summary"    : await self.summary(),
-                "duration"   : await self.duration(),
-                "rating"     : await self.average_rating(),
-                "language"   : await self.language(),
-                "reviews"    : await self.reviews()}
+            "asin"       : await self.asin(),
+            "title"      : await self.title(),
+            "is_abridged": await self.is_abridged(),
+            "authors"    : await self.authors(),
+            "narrators"  : await self.narrators(),
+            "summary"    : await self.summary(),
+            "duration"   : await self.duration(),
+            "rating"     : await self.average_rating(),
+            "language"   : await self.language(),
+            "reviews"    : await self.reviews()}
         return result
 
     @Logger()
     async def analyse(self):
-        if await self.language() not in self.book_generator.settings.audiobook_languages: return {"is_correct_product": False}
+        if await self.language() not in self.book_generator.settings.audiobook_languages: return {
+            "is_correct_product": False}
 
         with open(str(Path(__file__).parent / "i18n/audible_page.analyse.yaml"), "r") as f:
             json_schema = yaml.safe_load(f)
 
         prompt = i18n(
-                "audible_page.analyse",
-                title=self.book_generator.settings.title,
-                author=self.book_generator.settings.author,
-                url=self.url,
-                information=await self.information(),
-                language=i18n("prompts.language"), )
+            "audible_page.analyse",
+            title=self.book_generator.settings.title,
+            author=self.book_generator.settings.author,
+            url=self.url,
+            information=await self.information(),
+            language=i18n("prompts.language"), )
 
         llm = AsyncLLM(
-                base=self.book_generator.settings.general_base,
-                model=self.book_generator.settings.general_model,
-                api_key=self.book_generator.settings.general_api_key,
-                prompt=prompt,
-                temperature=0.2,
-                max_input_tokens=200_000,
-                max_output_tokens=50_000,
-                json_mode=True,
-                json_schema=json_schema)
+            base=self.book_generator.settings.general_base,
+            model=self.book_generator.settings.general_model,
+            api_key=self.book_generator.settings.general_api_key,
+            prompt=prompt,
+            temperature=0.2,
+            max_input_tokens=200_000,
+            max_output_tokens=50_000,
+            json_mode=True,
+            json_schema=json_schema)
         await llm.execute()
 
         result = llm.response
@@ -277,17 +288,14 @@ class AudiblePage(JSONCache):
 
 
 async def main():
-    import book_generator
-    ap = AudiblePage(
-            book_generator.BookGenerator(sheet_identifier="1UYxtgU_cHtcLE_Eh7lAZOfvu3hJ-Yqj3fPxQgXeGrws"),
-            "https://www.audible.com/pd/1984-Audiobook/B09NMPS9HQ")
-    await ap.run_analysis()
-    print(await ap.is_correct_page_for_book())
-    print(await ap.image_url())
+    ap = AudiblePage(bg=None, url="https://www.audible.de/pd/B075F2NCQP")
+    #await ap.run_analysis()
+    #print(await ap.is_correct_page_for_book())
+    print(await ap.title())
 
 
 if __name__ == "__main__":
     import asyncio
 
-    TomlI18n.initialize(locale="en", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
+    TomlI18n.initialize(locale="de", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))
     asyncio.run(main())

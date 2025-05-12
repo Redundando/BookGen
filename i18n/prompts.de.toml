@@ -42,29 +42,29 @@ Inhalt:
 
 [topic_finder]
 synthesize_sources = """
-Ich möchte einen umfangreichen, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben.
+Ich möchte einen umfassenden, tiefgehenden Artikel über das Buch "{title}" von {author} schreiben.
+Ich habe alle verfügbaren Informationen über das Buch gesammelt, indem ich mehrere Webseiten analysiert habe. Die gesammelten Informationen und Quellen sind unten aufgeführt.
+Basierend auf den bereitgestellten Informationen, schlage bitte Abschnitte für diesen Artikel vor.
 
-Ich habe alle verfügbaren Informationen über das Buch gesammelt, indem ich mehrere Webseiten analysiert habe. Die Informationen findest du unten.
-Basierend auf den bereitgestellten Informationen, schlage bitte vor, welche Sektionen der Artikel enthalten sollte.
-
-- Die 1. Sektion sollte ein kurzer "Über das Buch" Absatz ohne Spoiler sein
-- Die 2. Sektion sollte eine Zusammenfassung der Handlung (mit Spoilern) sein
-- Folgend kommen Sektionen zu allen Themen, die du basierend auf den Quellen für relevant hältst
-- Wenn passend, inkludiere eine Sektion, welche die Charaktere des Buches beschreibt
-- Diese Sektion kann (falls passend) am Ende erscheinen:
-    - Film-Adaptionen (falls verfügbar)
-- Die letzte Sektion muss Über den Autor / die Autorin sein
+- Der erste Abschnitt sollte ein kurzer "Über das Buch"-Paragraph ohne Spoiler sein
+- Der zweite Abschnitt sollte die Handlung zusammenfassen (mit Spoilern)
+- Optional (wenn das Buch ein fiktionales Werk ist) folge mit diesem Abschnitt:
+    - Beschreibung der Haupt- und Nebenfiguren des Buches (weglassen, wenn es ein Sachbuch ist)
+- Die folgenden Abschnitte sollten alle relevanten Themen abdecken, die aus den Quellen identifiziert werden können (nur ein Thema pro Abschnitt)
+- Optional, füge diesen Abschnitt am Ende ein:
+    - Filmadaptionen (falls zutreffend)
+- Der letzte Abschnitt muss über den Autor sein
+- KEINE Abschnitte über Rezensionen oder Lesermeinungen einfügen.
 
 {num_words_condition}
 
-- Es darf KEINE Sektion geben, die Kritiken oder Leserbewertungen abdeckt
+Für jeden Abschnitt bitte angeben:
 
-Für jede Sektion gib bitte an:
-- order: Ganzzahlwert, der die Reihenfolge der Sektionen angibt
-- topic_name: Richtiger Name / Überschrift für diese Sektion
-- topic_notes: Kurze Skizze dessen, was in diese Sektion behandelt werden soll (Schreibe dies als Prompt, welcher den Abschnitt basierend auf den Quellen generiert)
-- sources: welche der angegebenen URLs wären geeignet, um Informationen zu dieser Sektion zu sammeln (verwende 4 oder mehr Quellen-URLs)
-- word_count: Wie viele Wörter du vorschlägst, über dieses spezifische Thema zu schreiben
+- order: Ganze Zahl, die die Abschnittsreihenfolge angibt
+- topic_name: Passender Name/Überschrift für den Abschnitt (versuche das Wort "und" hier zu vermeiden)
+- topic_notes: Kurzer Umriss dessen, was in diesem Abschnitt behandelt werden sollte (schreibe dies als Aufforderung, um den Abschnitt basierend auf Quellen zu generieren)
+- sources: URLs, die für die Sammlung von Informationen für diesen Abschnitt geeignet sind (verwende 4 oder mehr URLs)
+- word_count: Vorgeschlagene Wortanzahl für dieses Thema
 
 Quelleninhalte: {sources}
 """
@@ -134,6 +134,8 @@ Unten findest du mehrere Quellen für dieses Thema. Bitte verwende nur Informati
 - Wenn es sich bei der Sektion um Rezeption handelt: Nutze NUR namhafte Kritikier. Nenne (wenn vorhanden) die Namen der Kritiker (etwa 'die New Times schreibt, dass...'); verwende NIEMALS vage Attributionen wie 'einige Kritiker'.
 - Ziehe niemals ein Fazit oder Zusammenfassung.
 
+- Vermeide vage Formulierungen wie „prägt die Ereignisse“, „symbolisiert“, „verdeutlicht“. Gib stattdessen konkrete Handlungen oder Entwicklungen an. Wenn keine bekannt sind, schreibe lieber nichts.
+
 - Antworte nur mit Markdown
 - Die Hauptüberschrift für diesen Abschnitt sollte als h2 ("##") formatiert sein
 - Stelle sicher, dass der Text ordnungsgemäß mit Markdown formatiert ist (verwende gegebenenfalls Unterüberschriften (### xyz oder #### xyz) oder Listen)
@@ -151,8 +153,9 @@ Bitte überarbeite den unten aufgeführten Abschnitt {section_number} ("{topic}"
 - Erwähne keine Quellen.
 - Abschnitte dürfen keine Zwischenüberschrift mit dem Wort "Einleitung" haben
 - Ziehe niemals ein Fazit oder Zusammenfassung.
+- Stelle sicher, dass die h2-Überschrift zum Inhalt des Abschnitts passt
 
-- Stelle sicher, dass der Text ordnungsgemäß mit Markdown formatiert ist
+- Stelle sicher, dass der Text ordnungsgemäß mit Markdown formatiert ist, behalte die h2-Überschrift bei
 
 - Wenn das Thema die Rezeption behandelt: biete spezifische Inhalte darüber, was Kritiker loben oder kritisieren.
 
@@ -174,13 +177,20 @@ section: {section}
 
 [style]
 language = """
- - Antworte auf Deutsch!
- - Vermeide unnötige Adjektive und Übertreibungen.
- - Sprich den Leser niemals direkt an!
- - Verwende niemals Passivsprache, stets aktive Sprache.
+- Antworte auf Deutsch!
+- Schreibe in einem prägnanten, faktenbasierten Stil, orientiert an Zeitungen wie der Süddeutschen der der FAZ.
+- Verwende eine neutrale, sachliche Sprache ohne Adjektivhäufungen, Superlative oder wertende Formulierungen.
+- Sprich den Leser nicht direkt an.
+- Verwende durchgehend Aktivsätze.
+- Vermeide Partizipialkonstruktionen wie „zeigend“, „beschreibend“, „verdeutlichend“. Formuliere stattdessen mit Nebensätzen oder Hauptsätzen.
+- Vermeide nominalisierte Substantivierungen wie „Thematisierung“, „Darstellung“, „Veranschaulichung“. Verwende stattdessen Verben.
+- Verwende kurze, direkte, klar strukturierte Sätze. Kein Schachtelsatzstil.
+- Keine blassen Adjektive wie „ernsthaft“, „komplex“, „faszinierend“. Nur Fakten.
+- Verwende keine formelhaften Übergänge wie „Ein weiterer Aspekt ist…“ oder „Im Fokus steht…“. Setze stattdessen logische, sprachlich natürliche Verbindungen.
+- Vermeide vage Formulierungen wie „prägt die Ereignisse“, „symbolisiert“, „verdeutlicht“. Gib stattdessen konkrete Handlungen oder Entwicklungen an. Wenn keine bekannt sind, schreibe lieber nichts.
 
- - Formatierung: Falls du Namen von Büchern, Filmen und Fernsehsendungen im Text erwähnst, formatiere sie kursiv: _xxx_
- - Formatierung: Bei Anführungszeichen verwende immer deutsche (geschwungene) Anführungszeichen: \"„\" und \"“\"
+- Formatierung: Falls du Namen von Büchern, Filmen und Fernsehsendungen im Text erwähnst, formatiere sie kursiv: _xxx_
+- Formatierung: Bei Anführungszeichen verwende immer deutsche (geschwungene) Anführungszeichen: \"„\" und \"“\"
 
 """
 
@@ -197,7 +207,7 @@ Ich schreibe einen ausführlichen Artikel über das Buch "{title}" von {Author}.
 
 Ich möchte eine Übersicht aller Hörbuchvariantes für dieses Buch hinzufügen. Die Informationen zu den jeweilgen Varianten sind unten zu finden.
 
-Schreibe bitte für jede Hörbuchvariante eine kurze Zusammenfassung (1 bis 3 Sätze) und gehe dabei wenn möglich auf die Sprecher und die Besonderheiten dieser Variante ein.
+Schreibe bitte für jede Hörbuchvariante eine kurze deutsche Zusammenfassung (1 bis 3 Sätze) und gehe dabei wenn möglich auf die Sprecher und die Besonderheiten dieser Variante ein.
 Es ist nicht nötig, die Handlung zusammenzufassen. Dies wird bereits im Artikel getan.
 
 {language}
@@ -213,9 +223,16 @@ Unten ist ein Artikel über das Buch "{title}" von {author}. Liefere bitte Meta-
 Bitte erstelle je einen mit Markdown formatierten Text für:
 
 meta_title: H1 Titel. 50 Zeichen. Muss dem Muster folgen: „%{title}“ von {author} - Zusammenfassung und Analyse'
-lead_in: Ein kurzer Absatz, der den Artikel einleitet und beschreibt. Muss dem Muster folgen: 'In unserer Zusammenfassung des Buches *{title}* von {author} erfährst du alles Wissenswerte zu dem Werk: Inhaltsangabe, Charaktere, Kapitel und Einordnung.'
-meta_description: SEO-optimierte Meta-Description. 125 Zeichen. Muss dem Muster folgen: 'Zusammenfassung des Buches „{title}“ von {author}: Handlung, Hauptfiguren und Analyse, sowie alle Hörbuchversionen auf Audible.'
+meta_description: SEO-optimierte Meta-Beschreibung. 125 Zeichen. Muss die Wörter "Zusammenfassung", "{title}" und "{author}" enthalten.
+lead_in: Bitte schreibe einen packenden Einstieg für diesen Artikel.
 
+Regeln für lead_in:
+
+- Stelle sicher, dass das Lead-In ein vollständiger Satz ist.
+- Bitte erwähne weder den Autor noch den Titel im Lead-In.
+- Verwende nicht die Wörter "entdecke", "tauche ein", "vertiefe dich", "erlebe", "erkunde" oder Variationen davon!
+- Länge: 120 Zeichen.
+- Der Einstieg muss mit dem Buchstaben "{first_letter}" beginnen
 
 Artikel: {article}
 """

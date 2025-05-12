@@ -27,7 +27,10 @@ class AudibleFinder(JSONCache):
         self.sheet_identifier = self.book_generator.sheet_identifier
         data_id = f"{slugify(self.sheet_identifier)}"
         self._content = ""
-        super().__init__(data_id=data_id, directory="data/audible_finder", ttl=self.book_generator.ttl, clear_cache=self.book_generator.clear_cache)
+        super().__init__(data_id=data_id,
+                         directory="data/audible_finder",
+                         ttl=self.book_generator.ttl,
+                         clear_cache=self.book_generator.clear_cache)
         self._audible_urls = []
         self._audible_pages = []
         self._book_descriptions = []
@@ -70,22 +73,22 @@ class AudibleFinder(JSONCache):
         information = [await p.information() for p in pages]
         article = await self.book_generator.article_writer.sections()
         prompt = i18n(
-                "audible_finder.summarize_products",
-                title=self.book_generator.settings.title,
-                author=self.book_generator.settings.author,
-                products=information,
-                article=article)
+            "audible_finder.summarize_products",
+            title=self.book_generator.settings.title,
+            author=self.book_generator.settings.author,
+            products=information,
+            article=article)
 
         llm = AsyncLLM(
-                base=self.book_generator.settings.general_base,
-                model=self.book_generator.settings.general_model,
-                api_key=self.book_generator.settings.general_api_key,
-                prompt=prompt,
-                temperature=0.2,
-                max_input_tokens=200_000,
-                max_output_tokens=50_000,
-                json_mode=True,
-                json_schema=json_schema)
+            base=self.book_generator.settings.general_base,
+            model=self.book_generator.settings.general_model,
+            api_key=self.book_generator.settings.general_api_key,
+            prompt=prompt,
+            temperature=0.2,
+            max_input_tokens=200_000,
+            max_output_tokens=50_000,
+            json_mode=True,
+            json_schema=json_schema)
         await llm.execute()
         result = llm.response.get("audible_products")
         return result
@@ -95,6 +98,22 @@ class AudibleFinder(JSONCache):
         for page in result:
             page.sort = await page.num_ratings()
         result = sorted(result, key=lambda p: p.sort, reverse=True)
+        return result
+
+    async def _remove_duplicate_pages(self, pages=None):
+        async def pages_are_equal(page1: AudiblePage, page2: AudiblePage):
+            if await page1.title() != await page2.title(): return False
+            if await page1.author() != await page2.author(): return False
+            if await page1.narrators() != await page2.narrators(): return False
+            if await page1.is_abridged() != await page2.is_abridged(): return False
+            return True
+
+        result = []
+        for page in pages:
+            is_duplicate = False
+            for listed_page in result:
+                if await pages_are_equal(listed_page, page): is_duplicate = True
+            if not is_duplicate: result.append(page)
         return result
 
     async def book_descriptions(self):
@@ -142,12 +161,11 @@ class AudibleFinder(JSONCache):
             save_image(feature_image, filename=f"{file_name} ({i})", path=self.DEFAULT_IMAGE_DIRECTORY, format_="webp")
             urls = urls[-1:] + urls[:-1]
 
-
-
     @Logger()
     async def run(self):
         await self._analyse_all_pages()
         correct_pages = [page for page in (await self.audible_pages()) if (await page.is_correct_page_for_book())]
-        self.product_pages = await self._sort_product_pages(correct_pages)
+        sorted_pages = await self._sort_product_pages(correct_pages)
+        self.product_pages = await self._remove_duplicate_pages(sorted_pages)
         self._on_audible_section = await self.generate_on_audible_section()
         await self.save_feature_image()

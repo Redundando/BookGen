@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
-
+import traceback
 import yaml
 from cacherator import JSONCache
 from ghostscraper import GhostScraper
@@ -29,8 +29,8 @@ class SourceContent(JSONCache):
             url=url,
             clear_cache=self.book_generator.clear_cache,
             ttl=self.book_generator.ttl,
-            load_timeout=15000,
-            max_retries=2)
+            load_timeout=self.book_generator.settings.source_scrape_timeout,
+            max_retries=self.book_generator.settings.source_scrape_retries)
         self.email_sharing = self.book_generator.settings.email
         self.title = self.book_generator.settings.title
 
@@ -41,7 +41,12 @@ class SourceContent(JSONCache):
         return self.__str__()
 
     async def _get_text_from_scrape(self):
-        text = await self.scraper.text()
+        try:
+            text = await self.scraper.text()
+        except Exception as e:
+            Logger.note(str(e))
+            Logger.note(traceback.format_exc())
+            text = ""
         self.scraper.json_cache_save()
         self.json_cache_save()
         return text

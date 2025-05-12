@@ -92,7 +92,9 @@ class SourceFinder(JSONCache):
             prompt,
             num_results=self.book_generator.settings.urls_per_search,
             language=self.book_generator.settings.language,
-            country=self.book_generator.settings.country)
+            country=self.book_generator.settings.country,
+            api_key=self.book_generator.settings.DEFAULT_BRAVE_API_KEY,
+        )
         result = await search.urls()
         Logger.note(f"Found information '{prompt}' with {len(result)} sources")
         return result

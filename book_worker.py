@@ -2,22 +2,26 @@ import asyncio
 import re
 from pathlib import Path
 
-from cacherator import Cached, JSONCache
+from cacherator import JSONCache
 from slugify import slugify
 from smart_spread import SmartSpread, SmartTab
 from toml_i18n import TomlI18n, i18n
 
 import _config
-import _config as config
 from audible_page import AudiblePage
 from book_generator import BookGenerator
-from helper import clean_string
 from book_settings import BookSettings
+from helper import clean_string
 
 
 class BookWorker(JSONCache):
 
-    def __init__(self, asin: str | None = None, title: str | None = None, author: str | None = None, language="en", country="us"):
+    def __init__(self,
+                 asin: str | None = None,
+                 title: str | None = None,
+                 author: str | None = None,
+                 language="en",
+                 country="us"):
         self.asin = asin
         self.language = language
         self.country = country
@@ -31,12 +35,15 @@ class BookWorker(JSONCache):
         self._sheet: SmartSpread | None = None
         self._settings_tab: SmartTab | None = None
         super().__init__(data_id=f"{self.data_id}", directory="data/book_worker")
-        self.bg:None|BookGenerator = None
+        self.bg: None | BookGenerator = None
 
     def audible_page(self) -> AudiblePage | None:
         if self.asin is None:
             return None
         if self._audible_page is None:
+            TomlI18n.initialize(locale=self.language,
+                                fallback_locale="en",
+                                directory=str(Path(__file__).parent / "i18n"))
             self._audible_page = AudiblePage(bg=None, url=f"""{i18n("url.audible")}/pd/{self.asin}""")
         return self._audible_page
 
@@ -55,7 +62,9 @@ class BookWorker(JSONCache):
 
     async def sheet(self):
         if self._sheet is None:
-            self._sheet = SmartSpread(sheet_identifier=await self.sheet_identifier(), key_file=_config.SERVICE_ACCOUNT_KEY_FILE, clear_cache=True)
+            self._sheet = SmartSpread(sheet_identifier=await self.sheet_identifier(),
+                                      key_file=_config.SERVICE_ACCOUNT_KEY_FILE,
+                                      clear_cache=True)
         return self._sheet
 
     async def settings_tab(self):
@@ -93,9 +102,11 @@ class BookWorker(JSONCache):
         self.bg = BookGenerator(sheet_identifier=sheet_identifier)
         await self.bg.run()
 
+
 async def main():
     bw = BookWorker(asin="B0797YBP7N", language="en")
     await bw.run()
+
 
 if __name__ == "__main__":
     TomlI18n.initialize(locale="en", fallback_locale="en", directory=str(Path(__file__).parent / "i18n"))

@@ -17,5 +17,7 @@ english = "Englisch"
 interesting_facts = "Wissenswertes zu *{title}*"
 on_audible = "*{title}* auf Audible"
 
-
 review_stopwords = "Ein Fehler ist aufgetreten.;Sie haben diese Rezension bewertet.;Wir haben Ihre Meldung erhalten und werden die Rezension prüfen.;Leute fanden das hilfreich"
+
+meta_description = "Meta Description"
+lead_in = "Lead In"
