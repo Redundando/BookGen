@@ -60,8 +60,13 @@ class TopicFinder(JSONCache):
         if self.book_generator.settings.word_count_is_set:
             num_words_condition = i18n("topic_finder.num_words_condition", num_words=self.book_generator.settings.proposed_word_count)
 
+        if self.book_generator.settings.article_type == "long":
+            prompt_key = "topic_finder.synthesize_sources_for_long_article"
+        else:
+            prompt_key = "topic_finder.synthesize_sources_for_short_article"
+
         prompt = i18n(
-                "topic_finder.synthesize_sources",
+                prompt_key,
                 title=self.book_generator.settings.title,
                 author=self.book_generator.settings.author,
                 num_words_condition=num_words_condition,

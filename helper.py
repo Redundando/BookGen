@@ -35,3 +35,11 @@ def to_float(value, fallback=0.0):
         return float(value)
     except (ValueError, TypeError):
         return fallback
+
+async def main():
+    import smartllm
+    print(await smartllm.AsyncLLM(prompt="", base="openai").models())
+
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(main())

@@ -11,18 +11,19 @@ if TYPE_CHECKING:
 
 class BookSettings(JSONCache):
     DEFAULT_GENERAL_BASE = "openai"
-    DEFAULT_GENERAL_MODEL = "gpt-4o"
+    DEFAULT_GENERAL_MODEL = "gpt-4.1"
     DEFAULT_GENERAL_API_KEY = os.environ.get("CHATGPT_API_KEY")
     DEFAULT_COMPLEX_BASE = "openai"
-    DEFAULT_COMPLEX_MODEL = "gpt-4.5-preview"
+    DEFAULT_COMPLEX_MODEL = "gpt-4.1"
     DEFAULT_COMPLEX_API_KEY = os.environ.get("CHATGPT_API_KEY")
     DEFAULT_WRITING_BASE = "openai"
-    DEFAULT_WRITING_MODEL = "gpt-4o"
+    DEFAULT_WRITING_MODEL = "gpt-4.1"
     DEFAULT_WRITING_API_KEY = os.environ.get("CHATGPT_API_KEY")
     DEFAULT_SEARCH_BASE = "perplexity"
     DEFAULT_SEARCH_MODEL = "sonar-pro"
     DEFAULT_SEARCH_API_KEY = os.environ.get("PERPLEXITY_API_KEY")
 
+    DEFAULT_ARTICLE_TYPE = "short"
     DEFAULT_MIN_SOURCE_LENGTH = 1500
     DEFAULT_NUM_SEARCH_REFINEMENTS = 7
     DEFAULT_URLS_PER_SEARCH = 14
@@ -78,6 +79,14 @@ class BookSettings(JSONCache):
     @property
     def word_count_is_set(self):
         return self.proposed_word_count > 0
+
+    @property
+    def article_type(self):
+        return self._settings.get("article_type", self.DEFAULT_ARTICLE_TYPE).lower().strip()
+
+    @property
+    def article_type_key(self):
+        return f"article_type.{self.article_type}"
 
     @property
     def search_base(self):

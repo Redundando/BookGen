@@ -133,6 +133,7 @@ class SourceFinder(JSONCache):
                 title=self.book_generator.settings.title,
                 author=self.book_generator.settings.author,
                 num_queries=self.book_generator.settings.num_search_refinements,
+                article_type=i18n(self.book_generator.settings.article_type_key),
                 sources=(await self.source_summary()))
         with open(str(Path(__file__).parent / "i18n/source_finder.find_more_search_queries.yaml"), "r") as f:
             schema = yaml.safe_load(f)

@@ -107,8 +107,8 @@ async def main():
     # anders = BookGenerator(sheet_identifier="1LxrgsfsA5-pRKGwRPFxahgL3yAzLG_NVUtYvTrKo4LI")
     # zeh = BookGenerator(sheet_identifier="1qGsRGOp6kM2OoQvyIse_InmKHPfE2NK1wjHuluo7K_A")
     # nef = BookGenerator(sheet_identifier="1UYxtgU_cHtcLE_Eh7lAZOfvu3hJ-Yqj3fPxQgXeGrws")
-    bilbo = BookGenerator(sheet_identifier="1KUhA6z-D5SToWX-AK02sVhoNDBjRiLigrlFKLazMT3E")
-    await bilbo.run()
+    arms = BookGenerator(sheet_identifier="1KpEXXszPdD96T7FXdQ2RxDNThK1Gd4cwzBLVxTwYRx4")
+    await arms.run()
 
 
 

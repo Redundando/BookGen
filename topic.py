@@ -132,6 +132,7 @@ class Topic(JSONCache):
                 word_count=word_count,
                 details=self.details,
                 topic=self.name,
+                article_type=i18n(self.book_generator.settings.article_type_key),
                 language=i18n("style.language"), )
         llm = AsyncLLM(
                 base=self.book_generator.settings.writing_base,
@@ -157,6 +158,7 @@ class Topic(JSONCache):
                 section_number=self.order,
                 article=article,
                 section=self._draft,
+                article_type=i18n(self.book_generator.settings.article_type_key),
                 topic=self.name)
         llm = AsyncLLM(
                 base=self.book_generator.settings.writing_base,
@@ -171,13 +173,13 @@ class Topic(JSONCache):
         self._refined_text = llm.response
         self.json_cache_save()
 
-
         prompt_language = i18n(
                 "topic.refine_language",
                 title=self.book_generator.settings.title,
                 author=self.book_generator.settings.author,
                 topic=self.name,
                 section=self._refined_text,
+                article_type=i18n(self.book_generator.settings.article_type_key),
                 language=i18n("style.language"))
 
         llm_language = AsyncLLM(

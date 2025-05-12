@@ -42,6 +42,7 @@ class FactFinder(JSONCache):
                 "fact_finder.synthesize_facts",
                 title=self.book_generator.settings.title,
                 author=self.book_generator.settings.author,
+                article_type=i18n(self.book_generator.settings.article_type_key),
                 facts=await self._all_interesting_facts())
         llm = AsyncLLM(
                 base=self.book_generator.settings.complex_base,
@@ -61,7 +62,10 @@ class FactFinder(JSONCache):
     @Logger()
     async def _get_key_facts(self):
         prompt = i18n(
-                "fact_finder.get_key_facts", title=self.book_generator.settings.title, author=self.book_generator.settings.author)
+                "fact_finder.get_key_facts",
+                title=self.book_generator.settings.title,
+                author=self.book_generator.settings.author,
+                article_type=i18n(self.book_generator.settings.article_type_key))
         llm = SmartLLM(base="perplexity", model="sonar-pro", api_key=os.environ.get("PERPLEXITY_API_KEY"), prompt=prompt)
         llm.execute()
         return llm.response
@@ -76,6 +80,7 @@ class FactFinder(JSONCache):
                 "fact_finder.organize_key_facts",
                 title=self.book_generator.settings.title,
                 author=self.book_generator.settings.author,
+                article_type=i18n(self.book_generator.settings.article_type_key),
                 facts=await self._get_key_facts())
 
         llm = AsyncLLM(
@@ -102,7 +107,7 @@ class FactFinder(JSONCache):
 
     async def key_facts_table(self):
         facts = await self.key_facts()
-        result=""
+        result = ""
         result += f"""- **{i18n("general.title")}**: {facts.get("title", "")}\n"""
         result += f"""- **{i18n("general.author")}**: {facts.get("author", "")}\n"""
         if "first_published" in facts: result += f"""- **{i18n("general.first_published")}**: {facts.get("first_published", "")}\n"""
@@ -111,11 +116,9 @@ class FactFinder(JSONCache):
         if "main_themes" in facts: result += f"""- **{i18n("general.themes")}**: {", ".join(facts.get("main_themes", []))}\n"""
         return result
 
-
-
     async def interesting_facts_list(self):
         result = ""
         facts = await self._synthesize_interesting_facts()
         for fact in facts:
-            result+=f"- {fact}\n"
+            result += f"- {fact}\n"
         return result

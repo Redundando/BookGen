@@ -47,7 +47,7 @@ class AsinListWorker(JSONCache):
 
     async def run(self):
         open_asin_rows = self.open_asins()
-        for row in open_asin_rows[:5]:
+        for row in open_asin_rows[:1]:
             try:
                 await self.run_row(row)
             except Exception as e:

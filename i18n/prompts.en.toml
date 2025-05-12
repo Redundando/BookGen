@@ -1,8 +1,13 @@
+[article_type]
+
+long = "a comprehensive, in-depth article"
+short = "a succinct article"
+
 [source_finder]
 search = """Summary of the book "{title}" by "{author}"."""
 
 find_more_search_queries = """
-I want to write a detailed, in-depth article about the book "{title}" by {author}.
+I want to write {article_type} about the book "{title}" by {author}.
 
 I've already collected information from multiple sources about the book.
 Based on the provided information, could you please formulate {num_queries} different refined search queries to find deep information about the book, its themes, and the context surrounding it?
@@ -41,7 +46,7 @@ Content:
 """
 
 [topic_finder]
-synthesize_sources = """
+synthesize_sources_for_long_article = """
 I want to write a comprehensive, in-depth article about the book "{title}" by {author}.
 
 I've gathered all available information about the book by analyzing multiple web pages. The collected information is below.
@@ -70,13 +75,45 @@ For each section, please specify:
 Source contents: {sources}
 """
 
+synthesize_sources_for_short_article = """
+I want to write a succinct article about the book "{title}" by {author}.
+
+I've gathered all available information about the book by analyzing multiple web pages. The collected information is below.
+
+Based on the provided information, please suggest sections for this article.
+
+- The first section should be a short "About the Book" paragraph without spoilers
+- The second section should summarize the plot (with spoilers)
+- Optionally (if it makes sense) follow with the following section:
+    - List of the book's main and minor characters as list with one sentence description (omit if it's a non-fiction work)
+- Define the following sections based on the source information
+    - Only cover the most relevant topics that relate directly to the book
+    - Those sections should be short
+    - If suitable a section can be structured in listicle style (this needs to be noted in the topic_notes)
+- Optionally, include this section at the end:
+    - Film Adaptations (if applicable)
+- The final section must be about the Author
+- DO NOT include any section covering reviews or reader opinions.
+
+{num_words_condition}
+
+For each section, please specify:
+- order: Integer indicating section order
+- topic_name: Proper name/heading for the section (try to avoid using the word "and" here)
+- topic_notes: Brief outline of what should be covered in this section (write this as a prompt to generate the section based on sources)
+- sources: URLs suitable for gathering information for this section (use 4 or more URLs)
+- word_count: Suggested word count for this topic
+
+Source contents: {sources}
+"""
+
 num_words_condition = """
 - The total length of all sections should be approximately {num_words} words.
 """
 
 [fact_finder]
 synthesize_facts = """
-I want to write a comprehensive, in-depth article about the book "{title}" by {author}.
+I want to write {article_type} about the book "{title}" by {author}.
 
 For this purpose, I've collected interesting facts about the book from several sources.
 
@@ -92,7 +129,7 @@ Facts: {facts}
 """
 
 get_key_facts = """
-I want to write a comprehensive, in-depth article about the book "{title}" by {author}.
+I want to write {article_type} about the book "{title}" by {author}.
 
 Please provide me the following facts:
 - Date of first publication
@@ -102,7 +139,7 @@ Please provide me the following facts:
 """
 
 organize_key_facts = """
-I want to write a comprehensive, in-depth article about the book "{title}" by {author}. For this, I've gathered a few facts.
+I want to write {article_type} about the book "{title}" by {author}. For this, I've gathered a few facts.
 
 Please summarize these facts into JSON as follows:
 
@@ -116,7 +153,7 @@ Collected facts: {facts}
 
 [topic]
 write_draft = """
-I want to write a comprehensive, in-depth article about the book "{title}" by {author}. Below is my article structure.
+I want to write {article_type} about the book "{title}" by {author}. Below is my article structure.
 
 Could you please write the section about "{topic}".
 
@@ -128,9 +165,9 @@ Below you’ll find multiple sources for this topic. Please only use information
 - Please write approximately {word_count} words
 - ONLY focus on the topic "{topic}" (other topics are handled separately)
 - Where possible and relevant, include direct quotes or specific scenes to support analysis
-- If the section involves analysis: rely on showing rather than telling—use examples to support claims
+- If the section involves analysis: rely on showing rather than telling - use examples to support claims
 - If the section is about reception: ONLY quote notable critics. Mention critic names explicitly (e.g., 'The New York Times writes...'); NEVER use vague attributions like 'some critics'.
-- NEVER conclude or summarize the article.
+- NEVER conclude or summarize the section
 
 - Respond in Markdown only
 - The main heading for this section should be formatted as h2 ("##")
@@ -141,12 +178,12 @@ source_information: {source_information}
 """
 
 refine_text = """
-I’m writing a comprehensive, in-depth article about the book "{title}" by {author}. Below is my article draft.
+I’m writing {article_type} about the book "{title}" by {author}. Below is my article draft.
 
 Please revise section {section_number} ("{topic}") below.
 
 - Ensure it aligns with the flow of the rest of the article
-- Never use vague source references (e.g., 'some critics say')
+- Never use vague source references (e.g., 'critics say')
 - Do not mention sources explicitly.
 - Sections must not have an intermediate heading named "Introduction"
 - NEVER conclude or summarize.
@@ -154,14 +191,12 @@ Please revise section {section_number} ("{topic}") below.
 
 - Ensure proper Markdown formatting, keep the h2 headline.
 
-- If the topic involves reception: provide specific details of critic praise or criticism.
-
 section_to_be_refined: {section}
 full_article_draft: {article}
 """
 
 refine_language = """
-I’m writing a comprehensive, in-depth article about the book "{title}" by {author}. Below is a section from this article.
+I’m writing {article_type} about the book "{title}" by {author}. Below is a section from this article.
 
 Please revise the language according to these guidelines:
 
@@ -178,18 +213,17 @@ language = """
 - Use fact-driven, neutral language. Avoid adjectives, hyperbole, or subjective judgment.
 - Do not address the reader.
 - Always use active voice.
-- Use short, direct, declarative sentences.
 - Avoid overly formal or stilted phrasing.
 - Use gender-neutral language where possible.
 - Avoid any sentence that uses a participial phrase (e.g., “..., showing”, “..., revealing”). Use two separate sentences or rephrase with full verbs instead.
 - NEVER use “highlighting”, “revealing”, “showing”, “demonstrating”, or “illustrating” as participial phrases.
 - When describing cause or consequence, use full clauses: “This shows that...”, “This means that...”, “As a result,...”.
 - Avoid trailing modifiers. Break complex thoughts into two sentences instead of using commas.
-- Favor clarity over flowery continuity.
 
 
 - Formatting: In case you mention names of books, movies, and TV shows inside text format them in italics: _xxx_
 - Formatting: In the case of quotation marks, always use English (curly) quotation marks: \"“\" and \"”\"
+- Formatting: NEVER use any dashes (e.g. "—").
 """
 
 [audible_page]
@@ -201,7 +235,7 @@ page_information: {information}
 
 [audible_finder]
 summarize_products = """
-I’m writing a detailed article about the book "{title}" by {Author}. The sections of the article are listed below.
+I’m writing an article about the book "{title}" by {Author}. The sections of the article are listed below.
 
 I want to add an overview of all audiobook variants of this book. Information on these variants is included below.
 
