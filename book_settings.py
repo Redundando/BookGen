@@ -23,7 +23,10 @@ class BookSettings(JSONCache):
     DEFAULT_SEARCH_MODEL = "sonar-pro"
     DEFAULT_SEARCH_API_KEY = os.environ.get("PERPLEXITY_API_KEY")
 
-    DEFAULT_ARTICLE_TYPE = "long"
+    DEFAULT_BRAVE_API_KEY = os.environ.get("BRAVE_API_KEY")
+
+
+    DEFAULT_ARTICLE_TYPE = "short"
     DEFAULT_MIN_SOURCE_LENGTH = 1500
     DEFAULT_NUM_SEARCH_REFINEMENTS = 7
     DEFAULT_URLS_PER_SEARCH = 14
@@ -31,6 +34,12 @@ class BookSettings(JSONCache):
     DEFAULT_MAX_SOURCES = 80
     DEFAULT_AUDIOBOOK_LANGUAGES = "english"
     DEFAULT_MAX_AUDIOBOOKS = 5
+
+    DEFAULT_SOURCE_SCRAPE_TIMEOUT = 20
+    DEFAULT_SOURCE_SCRAPE_RETRIES = 3
+
+    DEFAULT_AUDIBLE_SCRAPE_TIMEOUT = 30
+    DEFAULT_AUDIBLE_SCRAPE_RETRIES = 3
 
     def __init__(self, bg: "BookGenerator") -> None:
         self.book_generator = bg
@@ -185,3 +194,19 @@ class BookSettings(JSONCache):
     def set(self, key="", value=""):
         self._settings_tab.update_row_by_column_pattern(column="Key", value=key, updates={"Value": value})
         self._settings_tab.write_data()
+
+    @property
+    def source_scrape_timeout(self):
+        return int(self._settings.get("source_scrape_timeout", self.DEFAULT_SOURCE_SCRAPE_TIMEOUT))
+
+    @property
+    def source_scrape_retries(self):
+        return int(self._settings.get("source_scrape_retries", self.DEFAULT_SOURCE_SCRAPE_RETRIES))
+
+    @property
+    def audible_scrape_timeout(self):
+        return int(self._settings.get("audible_scrape_timeout", self.DEFAULT_AUDIBLE_SCRAPE_TIMEOUT))
+
+    @property
+    def audible_scrape_retries(self):
+        return int(self._settings.get("audible_scrape_retries", self.DEFAULT_AUDIBLE_SCRAPE_RETRIES))
