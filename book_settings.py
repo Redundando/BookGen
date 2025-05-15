@@ -23,6 +23,7 @@ class BookSettings(JSONCache):
     DEFAULT_SEARCH_MODEL = "sonar-pro"
     DEFAULT_SEARCH_API_KEY = os.environ.get("PERPLEXITY_API_KEY")
 
+    DEFAULT_ARTICLE_TYPE = "long"
     DEFAULT_MIN_SOURCE_LENGTH = 1500
     DEFAULT_NUM_SEARCH_REFINEMENTS = 7
     DEFAULT_URLS_PER_SEARCH = 14
@@ -67,6 +68,13 @@ class BookSettings(JSONCache):
     def country(self):
         return self._settings.get("country", "US").upper()
 
+    @property
+    def article_type(self):
+        return self._settings.get("article_type", self.DEFAULT_ARTICLE_TYPE)
+
+    @property
+    def article_type_key(self):
+        return f"article_type.{self.article_type}"
 
     @property
     def proposed_word_count(self):
